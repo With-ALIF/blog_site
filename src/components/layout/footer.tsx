@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Github, Twitter, Linkedin } from 'lucide-react';
+import { AlifLogo } from '../common/logo';
 
 export function Footer() {
   return (
@@ -9,7 +10,7 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-2">
-            <h3 className="font-headline text-2xl font-bold mb-2">ALIF BLOG</h3>
+            <AlifLogo className="h-14 w-28 mb-2" />
             <p className="text-muted-foreground mb-4 max-w-sm">A modern, responsive bilingual blog exploring tech, education, and lifestyle. Your daily dose of insights in Bangla and English.</p>
             <div className="flex space-x-4">
               <Link href="#" aria-label="Twitter"><Twitter className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" /></Link>

@@ -4,6 +4,7 @@ import { LanguageToggle } from '../common/language-toggle';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { AlifLogo } from '../common/logo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,7 +19,7 @@ export function Header() {
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold font-headline text-lg">ALIF BLOG</span>
+            <AlifLogo className="h-10 w-20" />
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {navLinks.map(link => (
@@ -39,7 +40,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
               <Link href="/" className="mr-6 flex items-center space-x-2 mb-6">
-                 <span className="font-bold font-headline text-lg">ALIF BLOG</span>
+                 <AlifLogo className="h-10 w-20" />
               </Link>
               <nav className="flex flex-col space-y-4">
                 {navLinks.map(link => (
