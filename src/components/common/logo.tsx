@@ -6,6 +6,7 @@ export function AlifLogo({ className }: { className?: string }) {
       viewBox="0 0 800 400"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      preserveAspectRatio="xMidYMid meet"
     >
       <defs>
         <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
