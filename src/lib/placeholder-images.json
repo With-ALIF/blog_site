@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Abstract background with language characters",
+      "imageUrl": "https://images.unsplash.com/photo-1710874243653-8316e5ef1cc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxsYW5ndWFnZSUyMGFic3RyYWN0fGVufDB8fHx8MTc3MTY1MDM1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "language abstract"
+    },
+    {
+      "id": "post-1",
+      "description": "A person coding on a laptop with multiple monitors in a dark room.",
+      "imageUrl": "https://images.unsplash.com/photo-1610563166150-b34df4f3bcd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb2RpbmclMjBzZXR1cHxlbnwwfHx8fDE3NzE2NTAzNTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coding setup"
+    },
+    {
+      "id": "post-2",
+      "description": "A modern classroom with a teacher using a tablet.",
+      "imageUrl": "https://images.unsplash.com/photo-1758413350815-7b06dbbfb9a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBjbGFzc3Jvb218ZW58MHx8fHwxNzcxNTk5MzU2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern classroom"
+    },
+    {
+      "id": "post-3",
+      "description": "A person hiking in a beautiful mountain range.",
+      "imageUrl": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtb3VudGFpbiUyMGhpa2V8ZW58MHx8fHwxNzcxNTgzMjU2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mountain hike"
+    },
+    {
+      "id": "post-4",
+      "description": "A complex web of interconnected data points, visualizing a network.",
+      "imageUrl": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkYXRhJTIwbmV0d29ya3xlbnwwfHx8fDE3NzE1NTcxNzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data network"
+    },
+    {
+      "id": "post-5",
+      "description": "A desk with a laptop, notebook, and coffee, representing a productive work environment.",
+      "imageUrl": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b3JrJTIwZGVza3xlbnwwfHx8fDE3NzE2NTAzNTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "work desk"
+    },
+    {
+      "id": "post-6",
+      "description": "A person meditating in a serene, natural setting.",
+      "imageUrl": "https://images.unsplash.com/photo-1609718561976-d52836e625cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZXJlbmUlMjBtZWRpdGF0aW9ufGVufDB8fHx8MTc3MTU5NjMyOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "serene meditation"
+    }
+  ]
 }
