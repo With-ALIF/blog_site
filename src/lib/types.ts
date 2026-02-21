@@ -1,4 +1,5 @@
-export type Category = 'Tech' | 'Education' | 'Programming' | 'Lifestyle';
+export const categories = ['Tech', 'Education', 'Programming', 'Lifestyle'] as const;
+export type Category = (typeof categories)[number];
 
 export interface Post {
   id: string;

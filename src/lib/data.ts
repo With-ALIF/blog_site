@@ -1,4 +1,4 @@
-import { Post, Category } from './types';
+import { Post } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) => {
@@ -95,5 +95,3 @@ export const posts: Post[] = [
     date: '2024-07-15T08:00:00Z',
   }
 ];
-
-export const categories: Category[] = ['Tech', 'Education', 'Programming', 'Lifestyle'];
