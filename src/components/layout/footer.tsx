@@ -9,7 +9,7 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-2">
-            <h3 className="font-headline text-2xl font-bold mb-2">Lingua Blog</h3>
+            <h3 className="font-headline text-2xl font-bold mb-2">ALIF BLOG</h3>
             <p className="text-muted-foreground mb-4 max-w-sm">A modern, responsive bilingual blog exploring tech, education, and lifestyle. Your daily dose of insights in Bangla and English.</p>
             <div className="flex space-x-4">
               <Link href="#" aria-label="Twitter"><Twitter className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" /></Link>
@@ -36,7 +36,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Lingua Blog. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ALIF BLOG. All rights reserved.</p>
         </div>
       </div>
     </footer>
