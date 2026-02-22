@@ -37,7 +37,7 @@ function BlogPageContent() {
       const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ query: searchQuery });
       const foundPosts = result.blogPosts
         .map(bp => posts.find(p => p.id === bp.id))
-        .filter((p): p is Post => Boolean(p));
+        .filter((p): p is Post => Boolean(p) && p.status === 'published');
       setSearchResults(foundPosts);
       if(foundPosts.length === 0) {
         toast({
@@ -57,13 +57,15 @@ function BlogPageContent() {
     }
   };
 
+  const publishedPosts = useMemo(() => posts.filter(p => p.status === 'published'), []);
+
   const filteredPosts = useMemo(() => {
     if (searchResults) return searchResults;
     if (activeCategory) {
-      return posts.filter(post => post.category === activeCategory);
+      return publishedPosts.filter(post => post.category === activeCategory);
     }
-    return posts;
-  }, [activeCategory, searchResults]);
+    return publishedPosts;
+  }, [activeCategory, searchResults, publishedPosts]);
 
   const paginatedPosts = useMemo(() => {
     const startIndex = (currentPage - 1) * postsPerPage;

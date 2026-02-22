@@ -23,6 +23,7 @@ export const posts: Post[] = [
     category: 'Programming',
     author: 'Jane Doe',
     date: '2024-07-20T10:00:00Z',
+    status: 'published',
   },
   {
     id: '2',
@@ -37,6 +38,7 @@ export const posts: Post[] = [
     category: 'Education',
     author: 'John Smith',
     date: '2024-07-19T14:30:00Z',
+    status: 'published',
   },
   {
     id: '3',
@@ -51,6 +53,7 @@ export const posts: Post[] = [
     category: 'Lifestyle',
     author: 'Emily White',
     date: '2024-07-18T09:00:00Z',
+    status: 'pending',
   },
   {
     id: '4',
@@ -65,6 +68,7 @@ export const posts: Post[] = [
     category: 'Programming',
     author: 'Chris Green',
     date: '2024-07-17T16:00:00Z',
+    status: 'published',
   },
     {
     id: '5',
@@ -79,6 +83,7 @@ export const posts: Post[] = [
     category: 'Tech',
     author: 'Jane Doe',
     date: '2024-07-16T11:00:00Z',
+    status: 'published',
   },
   {
     id: '6',
@@ -93,5 +98,6 @@ export const posts: Post[] = [
     category: 'Tech',
     author: 'John Smith',
     date: '2024-07-15T08:00:00Z',
+    status: 'published',
   }
 ];

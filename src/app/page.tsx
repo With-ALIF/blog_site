@@ -10,8 +10,9 @@ import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const { language } = useLanguage();
-  const featuredPosts = posts.slice(0, 2);
-  const latestPosts = posts.slice(0, 6);
+  const publishedPosts = posts.filter(p => p.status === 'published');
+  const featuredPosts = publishedPosts.slice(0, 2);
+  const latestPosts = publishedPosts.slice(0, 6);
 
   const heroContent = {
     en: {

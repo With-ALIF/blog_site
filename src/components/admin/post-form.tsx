@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { Post, categories } from '@/lib/types';
+import { Post, categories, postStatuses } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ const formSchema = z.object({
   content_bn: z.string().min(20, { message: 'Bangla content must be at least 20 characters.' }),
   category: z.enum(categories),
   author: z.string().min(2, { message: 'Author name must be at least 2 characters.' }),
+  status: z.enum(postStatuses),
 });
 
 type PostFormValues = z.infer<typeof formSchema>;
@@ -46,6 +47,7 @@ export function PostForm({ post }: PostFormProps) {
       content_bn: post?.content_bn || '',
       category: post?.category || 'Tech',
       author: post?.author || 'Admin',
+      status: post?.status || 'pending',
     },
   });
 
@@ -175,7 +177,7 @@ export function PostForm({ post }: PostFormProps) {
             </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
             <FormField
               control={form.control}
               name="category"
@@ -205,6 +207,26 @@ export function PostForm({ post }: PostFormProps) {
                   <FormControl>
                     <Input placeholder="Author's name" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {postStatuses.map(status => <SelectItem key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

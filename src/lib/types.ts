@@ -1,6 +1,9 @@
 export const categories = ['Tech', 'Education', 'Programming', 'Lifestyle'] as const;
 export type Category = (typeof categories)[number];
 
+export const postStatuses = ['published', 'pending'] as const;
+export type PostStatus = (typeof postStatuses)[number];
+
 export interface Post {
   id: string;
   slug: string;
@@ -15,4 +18,5 @@ export interface Post {
   category: Category;
   author: string;
   date: string; // ISO 8601 format
+  status: PostStatus;
 }

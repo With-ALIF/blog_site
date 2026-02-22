@@ -31,9 +31,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -74,26 +76,65 @@ export default function AdminDashboardPage() {
     router.push(`/admin/posts/edit/${slug}`);
   };
 
+  const totalPosts = posts.length;
+  const pendingPostsCount = posts.filter(post => post.status === 'pending').length;
+  const publishedPostsCount = totalPosts - pendingPostsCount;
+
   return (
     <>
       <div className="container py-16 md:py-24">
-        <div className="flex justify-between items-center mb-12">
+        <div className="flex justify-between items-center mb-8">
           <div>
-              <h1 className="text-4xl md:text-5xl font-bold font-headline">Manage Posts</h1>
-              <p className="text-lg text-muted-foreground mt-2">Create, edit, and delete blog posts.</p>
+              <h1 className="text-4xl md:text-5xl font-bold font-headline">Dashboard</h1>
+              <p className="text-lg text-muted-foreground mt-2">An overview of your blog's content.</p>
           </div>
           <Button onClick={handleCreate}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Create New Post
           </Button>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-12">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalPosts}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Published Posts</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{publishedPostsCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Posts</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingPostsCount}</div>
+            </CardContent>
+          </Card>
+        </div>
         
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-3xl font-bold font-headline">Manage Posts</h2>
+        </div>
+
         <div className="bg-card rounded-lg shadow-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead className="hidden md:table-cell">Category</TableHead>
+                <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -103,6 +144,11 @@ export default function AdminDashboardPage() {
                 <TableRow key={post.id}>
                   <TableCell className="font-medium max-w-xs truncate">{language === 'en' ? post.title_en : post.title_bn}</TableCell>
                   <TableCell className="hidden md:table-cell">{post.category}</TableCell>
+                   <TableCell className="hidden md:table-cell">
+                    <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="capitalize">
+                      {post.status}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">{new Date(post.date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
