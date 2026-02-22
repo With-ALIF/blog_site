@@ -1,4 +1,4 @@
-import { Post } from './types';
+import { Post, Category } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) => {
@@ -8,6 +8,8 @@ const getImage = (id: string) => {
 };
 
 export const heroImage = getImage('hero');
+
+export let categories: Category[] = ['Tech', 'Education', 'Programming', 'Lifestyle'];
 
 export const posts: Post[] = [
   {

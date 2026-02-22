@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { posts } from '@/lib/data';
+import { posts, categories } from '@/lib/data';
 import { Post } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,7 +31,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle, Tags } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,6 +79,7 @@ export default function AdminDashboardPage() {
   const totalPosts = posts.length;
   const pendingPostsCount = posts.filter(post => post.status === 'pending').length;
   const publishedPostsCount = totalPosts - pendingPostsCount;
+  const totalCategories = categories.length;
 
   return (
     <>
@@ -94,7 +95,7 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-12">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
@@ -120,6 +121,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pendingPostsCount}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
+              <Tags className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCategories}</div>
+               <Button variant="link" className="p-0 h-auto mt-1" onClick={() => router.push('/admin/categories')}>
+                Manage Categories
+              </Button>
             </CardContent>
           </Card>
         </div>

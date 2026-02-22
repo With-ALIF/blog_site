@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Post, categories, postStatuses } from '@/lib/types';
+import { Post, postStatuses } from '@/lib/types';
+import { categories } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,7 @@ const formSchema = z.object({
   excerpt_bn: z.string().min(10, { message: 'Bangla excerpt must be at least 10 characters.' }),
   content_en: z.string().min(20, { message: 'English content must be at least 20 characters.' }),
   content_bn: z.string().min(20, { message: 'Bangla content must be at least 20 characters.' }),
-  category: z.enum(categories),
+  category: z.string().min(1, { message: 'A category is required.' }),
   author: z.string().min(2, { message: 'Author name must be at least 2 characters.' }),
   status: z.enum(postStatuses),
   imageUrl: z.string().optional().or(z.literal('')),
@@ -51,7 +52,7 @@ export function PostForm({ post }: PostFormProps) {
       excerpt_bn: post?.excerpt_bn || '',
       content_en: post?.content_en || '',
       content_bn: post?.content_bn || '',
-      category: post?.category || 'Tech',
+      category: post?.category || categories[0] || '',
       author: post?.author || 'Admin',
       status: post?.status || 'pending',
       imageUrl: post?.imageUrl || '',

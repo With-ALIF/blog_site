@@ -1,8 +1,7 @@
-export const categories = ['Tech', 'Education', 'Programming', 'Lifestyle'] as const;
-export type Category = (typeof categories)[number];
-
 export const postStatuses = ['published', 'pending'] as const;
 export type PostStatus = (typeof postStatuses)[number];
+
+export type Category = string;
 
 export interface Post {
   id: string;
