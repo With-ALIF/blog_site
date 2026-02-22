@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Post, categories, postStatuses } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -23,7 +25,7 @@ const formSchema = z.object({
   category: z.enum(categories),
   author: z.string().min(2, { message: 'Author name must be at least 2 characters.' }),
   status: z.enum(postStatuses),
-  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
   imageHint: z.string().max(40, {message: 'Image hint should be one or two words.'}).optional(),
 });
 
@@ -37,6 +39,8 @@ export function PostForm({ post }: PostFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const isEditing = !!post;
+  
+  const [imagePreview, setImagePreview] = useState<string | null>(post?.imageUrl || null);
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(formSchema),
@@ -54,6 +58,28 @@ export function PostForm({ post }: PostFormProps) {
       imageHint: post?.imageHint || '',
     },
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+            variant: "destructive",
+            title: "File too large",
+            description: "Please upload an image smaller than 2MB.",
+        });
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        form.setValue('imageUrl', result, { shouldValidate: true });
+        setImagePreview(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   function onSubmit(values: PostFormValues) {
     const slug = values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -241,18 +267,27 @@ export function PostForm({ post }: PostFormProps) {
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 pt-4 border-t">
-          <FormField
+           <FormField
             control={form.control}
             name="imageUrl"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
-                <FormLabel>Image URL</FormLabel>
+                <FormLabel>Post Image</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://example.com/image.jpg" {...field} />
+                  <Input 
+                    type="file" 
+                    accept="image/png, image/jpeg, image/gif, image/webp"
+                    onChange={handleFileChange}
+                  />
                 </FormControl>
                 <FormDescription>
-                  URL for the post's main image.
+                  Upload an image (max 2MB). Stored temporarily for the session.
                 </FormDescription>
+                 {imagePreview && (
+                    <div className="mt-4 relative aspect-video rounded-lg overflow-hidden">
+                        <Image src={imagePreview} alt="Image Preview" fill className="object-cover" />
+                    </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -267,7 +302,7 @@ export function PostForm({ post }: PostFormProps) {
                   <Input placeholder="e.g. 'mountain hike'" {...field} />
                 </FormControl>
                 <FormDescription>
-                  One or two keywords for AI image search.
+                  One or two keywords for AI image search if no image is uploaded.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
