@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { Post, categories, postStatuses } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,6 +23,8 @@ const formSchema = z.object({
   category: z.enum(categories),
   author: z.string().min(2, { message: 'Author name must be at least 2 characters.' }),
   status: z.enum(postStatuses),
+  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  imageHint: z.string().max(40, {message: 'Image hint should be one or two words.'}).optional(),
 });
 
 type PostFormValues = z.infer<typeof formSchema>;
@@ -48,20 +50,25 @@ export function PostForm({ post }: PostFormProps) {
       category: post?.category || 'Tech',
       author: post?.author || 'Admin',
       status: post?.status || 'pending',
+      imageUrl: post?.imageUrl || '',
+      imageHint: post?.imageHint || '',
     },
   });
 
   function onSubmit(values: PostFormValues) {
+    const slug = values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    
     // This is a mock submission that mutates the in-memory array.
     if (isEditing && post) {
         const postIndex = posts.findIndex(p => p.id === post.id);
         if (postIndex !== -1) {
-            const updatedPost: Post = {
+            posts[postIndex] = {
                 ...posts[postIndex],
                 ...values,
-                slug: values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
+                slug,
+                imageUrl: values.imageUrl || posts[postIndex].imageUrl,
+                imageHint: values.imageHint || posts[postIndex].imageHint || 'abstract placeholder'
             };
-            posts[postIndex] = updatedPost;
         }
         toast({
             title: 'Post Updated!',
@@ -70,11 +77,11 @@ export function PostForm({ post }: PostFormProps) {
     } else {
         const newPost: Post = {
             id: String(Date.now()),
-            slug: values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
-            ...values,
             date: new Date().toISOString(),
-            imageUrl: `https://picsum.photos/seed/${Math.random()}/1200/800`,
-            imageHint: 'abstract placeholder'
+            ...values,
+            slug,
+            imageUrl: values.imageUrl || `https://picsum.photos/seed/${Math.random()}/1200/800`,
+            imageHint: values.imageHint || 'abstract placeholder',
         };
         posts.unshift(newPost);
         toast({
@@ -233,6 +240,41 @@ export function PostForm({ post }: PostFormProps) {
             />
         </div>
         
+        <div className="grid md:grid-cols-2 gap-8 pt-4 border-t">
+          <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Image URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://example.com/image.jpg" {...field} />
+                </FormControl>
+                <FormDescription>
+                  URL for the post's main image.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="imageHint"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Image Hint</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 'mountain hike'" {...field} />
+                </FormControl>
+                <FormDescription>
+                  One or two keywords for AI image search.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <div className="flex justify-end gap-4">
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
             <Button type="submit">{isEditing ? 'Update Post' : 'Create Post'}</Button>
