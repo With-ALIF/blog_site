@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Github } from 'lucide-react';
+import { Github, Globe } from 'lucide-react';
 import { AlifLogo } from '../common/logo';
 import { usePathname } from 'next/navigation';
 
@@ -22,6 +22,9 @@ export function Footer() {
             <div className="flex space-x-4">
               <Link href="https://github.com/With-ALIF" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <Github className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" />
+              </Link>
+              <Link href="https://alif.mnr.bd/" target="_blank" rel="noopener noreferrer" aria-label="Website">
+                <Globe className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" />
               </Link>
             </div>
           </div>
