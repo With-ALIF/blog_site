@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Clock, User, Twitter, Facebook, Linkedin, Languages, Loader2 } from 'lucide-react';
+import { Clock, User, Twitter, Facebook, Linkedin, Languages, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { onDemandPostTranslation } from '@/ai/flows/on-demand-post-translation';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Post } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function SocialShare({ title, url }: { title: string, url: string }) {
   const encodedTitle = encodeURIComponent(title);
@@ -51,9 +52,10 @@ export default function PostPage() {
   const firestore = useFirestore();
   const postQuery = useMemoFirebase(() => {
       if (!firestore || !slug) return null;
-      return query(collection(firestore, 'posts'), where('slug', '==', slug));
+      return query(collection(firestore, 'posts'), where('slug', '==', slug), where('status', '==', 'published'));
   }, [firestore, slug]);
-  const { data: posts, isLoading } = useCollection<Post>(postQuery);
+  
+  const { data: posts, isLoading, error } = useCollection<Post>(postQuery);
   const post = posts?.[0];
 
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -74,6 +76,20 @@ export default function PostPage() {
       <div className="container flex items-center justify-center py-24">
         <Loader2 className="h-16 w-16 animate-spin" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="container max-w-4xl py-12 md:py-20">
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                    There was a problem loading this post. Please try again later.
+                </AlertDescription>
+            </Alert>
+        </div>
     );
   }
 
