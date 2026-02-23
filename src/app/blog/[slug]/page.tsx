@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Badge } from '@/components/ui/badge';
@@ -15,10 +15,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Post } from '@/lib/types';
-
-type PostPageProps = {
-  params: { slug: string };
-};
 
 function SocialShare({ title, url }: { title: string, url: string }) {
   const encodedTitle = encodeURIComponent(title);
@@ -46,8 +42,9 @@ function SocialShare({ title, url }: { title: string, url: string }) {
   );
 }
 
-export default function PostPage({ params }: PostPageProps) {
-  const { slug } = params;
+export default function PostPage() {
+  const params = useParams();
+  const slug = params.slug as string;
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
   
