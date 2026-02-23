@@ -334,9 +334,9 @@ export function PostForm({ post }: PostFormProps) {
           />
         </div>
 
-        <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">{isEditing ? 'Update Post' : 'Create Post'}</Button>
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-4">
+            <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">Cancel</Button>
+            <Button type="submit" className="w-full sm:w-auto">{isEditing ? 'Update Post' : 'Create Post'}</Button>
         </div>
       </form>
     </Form>

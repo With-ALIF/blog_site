@@ -2,12 +2,12 @@ import { PostForm } from '@/components/admin/post-form';
 
 export default function NewPostPage() {
   return (
-    <div className="container py-16 md:py-24">
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold font-headline">Create New Post</h1>
-        <p className="text-lg text-muted-foreground mt-2">Fill out the form below to add a new blog post.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold font-headline">Create New Post</h1>
+        <p className="text-md text-muted-foreground mt-1">Fill out the form below to add a new blog post.</p>
       </div>
-      <div className="bg-card p-8 rounded-lg shadow-lg">
+      <div className="bg-card p-6 md:p-8 rounded-lg shadow-sm border">
         <PostForm />
       </div>
     </div>

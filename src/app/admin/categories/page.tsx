@@ -84,32 +84,32 @@ export default function CategoriesPage() {
 
   return (
     <>
-      <div className="container py-16 md:py-24">
+      <div>
         <div className="flex justify-between items-center mb-8">
           <div>
-              <h1 className="text-4xl md:text-5xl font-bold font-headline">Manage Categories</h1>
-              <p className="text-lg text-muted-foreground mt-2">Add or remove blog categories.</p>
+              <h1 className="text-3xl md:text-4xl font-bold font-headline">Manage Categories</h1>
+              <p className="text-md text-muted-foreground mt-1">Add or remove blog categories.</p>
           </div>
-           <Button variant="outline" onClick={() => router.back()}>Back to Dashboard</Button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-            <Card className="p-6">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+            <Card className="p-6 shadow-sm border">
                 <h2 className="text-2xl font-bold font-headline mb-4">Add New Category</h2>
-                <form onSubmit={handleCreate} className="flex gap-2">
+                <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-2">
                     <Input 
                         placeholder="New category name..."
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
+                        className="flex-grow"
                     />
-                    <Button type="submit">
+                    <Button type="submit" className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add
                     </Button>
                 </form>
             </Card>
 
-            <Card>
+            <Card className="shadow-sm border">
                 <h2 className="text-2xl font-bold font-headline p-6">Existing Categories</h2>
                 <div className="overflow-hidden">
                     <Table>
