@@ -22,5 +22,10 @@ service cloud.firestore {
         allow delete: if isSignedIn();
       }
     }
+
+    // This rule is specifically for the collection group query in the admin panel.
+    match /{path=**}/comments/{commentId} {
+      allow list: if isSignedIn(); // Allow admin to list all comments across all posts.
+    }
   }
 }

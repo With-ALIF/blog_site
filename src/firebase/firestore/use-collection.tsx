@@ -33,7 +33,8 @@ export interface InternalQuery extends Query<DocumentData> {
     path: {
       canonicalString(): string;
       toString(): string;
-    }
+    };
+    collectionGroup?: string;
   }
 }
 
@@ -58,7 +59,7 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
@@ -85,11 +86,18 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // This logic extracts the path from either a ref or a query
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+        const internalQuery = memoizedTargetRefOrQuery as InternalQuery;
+        let path: string;
+
+        if (internalQuery.type === 'collection') {
+          path = (internalQuery as CollectionReference).path;
+        } else if (internalQuery._query?.collectionGroup) {
+          // For collection group queries, the path is not a single path, so we create a descriptive string.
+          path = `all documents in collection group '${internalQuery._query.collectionGroup}'`;
+        } else {
+          // For standard queries.
+          path = internalQuery._query?.path?.canonicalString() ?? 'unknown path';
+        }
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
