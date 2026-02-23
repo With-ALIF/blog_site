@@ -22,3 +22,13 @@ export interface Post {
   date: string; // ISO 8601 format
   status: PostStatus;
 }
+
+export interface Comment {
+  id: string;
+  postId: string;
+  postTitle: string;
+  authorName: string;
+  authorEmail: string;
+  content: string;
+  createdAt: string; // ISO 8601 format
+}

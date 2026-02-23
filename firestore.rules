@@ -15,6 +15,12 @@ service cloud.firestore {
       allow get: if resource.data.status == 'published' || isSignedIn();
       allow list: if true;
       allow write: if isSignedIn();
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if true;
+        allow delete: if isSignedIn();
+      }
     }
   }
 }

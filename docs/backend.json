@@ -35,6 +35,20 @@
         "slug", "title_en", "title_bn", "excerpt_en", "excerpt_bn",
         "content_en", "content_bn", "category", "author", "date", "status"
       ]
+    },
+    "Comment": {
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a blog post.",
+      "properties": {
+        "postId": { "type": "string" },
+        "postTitle": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorEmail": { "type": "string", "format": "email" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["postId", "postTitle", "authorName", "content", "createdAt"]
     }
   },
   "auth": {
@@ -70,6 +84,26 @@
             {
               "name": "postId",
               "description": "The unique ID for the blog post."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/posts/{postId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments for a specific blog post. Publicly readable, writable by anyone, deletable by admins.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The ID of the post being commented on."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique ID for the comment."
             }
           ]
         }
