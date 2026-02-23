@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { posts } from '@/lib/data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const formSchema = z.object({
   title_en: z.string().min(2, { message: 'English title must be at least 2 characters.' }),
@@ -59,28 +60,6 @@ export function PostForm({ post }: PostFormProps) {
       imageHint: post?.imageHint || '',
     },
   });
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        toast({
-            variant: "destructive",
-            title: "File too large",
-            description: "Please upload an image smaller than 2MB.",
-        });
-        event.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        form.setValue('imageUrl', result, { shouldValidate: true });
-        setImagePreview(result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   function onSubmit(values: PostFormValues) {
     const slug = values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -271,23 +250,67 @@ export function PostForm({ post }: PostFormProps) {
            <FormField
             control={form.control}
             name="imageUrl"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Post Image</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="file" 
-                    accept="image/png, image/jpeg, image/gif, image/webp"
-                    onChange={handleFileChange}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Upload an image (max 2MB). Stored temporarily for the session.
-                </FormDescription>
-                 {imagePreview && (
-                    <div className="mt-4 relative aspect-video rounded-lg overflow-hidden">
-                        <Image src={imagePreview} alt="Image Preview" fill className="object-cover" />
-                    </div>
+                <Tabs defaultValue={field.value?.startsWith('data:image') ? 'upload' : 'link'} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="upload">Upload</TabsTrigger>
+                    <TabsTrigger value="link">Link</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="upload" className="pt-2">
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/png, image/jpeg, image/gif, image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                              toast({
+                                variant: 'destructive',
+                                title: 'File too large',
+                                description: 'Please upload an image smaller than 2MB.',
+                              });
+                              e.target.value = '';
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const result = reader.result as string;
+                              field.onChange(result);
+                              setImagePreview(result);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload an image (max 2MB).
+                    </FormDescription>
+                  </TabsContent>
+                  <TabsContent value="link" className="pt-2">
+                    <FormControl>
+                      <Input
+                        placeholder="https://example.com/image.jpg"
+                        value={field.value?.startsWith('http') ? field.value : ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                          setImagePreview(e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a direct URL to an image.
+                    </FormDescription>
+                  </TabsContent>
+                </Tabs>
+                
+                {imagePreview && (
+                  <div className="mt-4 relative aspect-video rounded-lg overflow-hidden">
+                    <Image src={imagePreview} alt="Image Preview" fill className="object-cover" />
+                  </div>
                 )}
                 <FormMessage />
               </FormItem>
