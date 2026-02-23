@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlifLogo } from '@/components/common/logo';
 import { Loader2 } from 'lucide-react';
-import { useAuth, useUser, initiateEmailSignIn } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('admin@alif.com');
@@ -26,24 +27,45 @@ export default function AdminLoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsLoading(true);
 
-    initiateEmailSignIn(auth, email, password);
-
-    // The onAuthStateChanged listener in the provider will handle success.
-    // We can add a timeout to handle login failures.
-    setTimeout(() => {
-        if (!auth.currentUser) {
-            toast({
-              variant: 'destructive',
-              title: 'Login Failed',
-              description: 'Invalid email or password.',
-            });
-            setIsLoading(false);
+    try {
+      // First, try to sign in
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged will handle redirect on success.
+    } catch (signInError: any) {
+      // If user does not exist or password is wrong, try creating the user.
+      // Firebase returns 'auth/invalid-credential' for both cases now.
+      if (signInError.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          // onAuthStateChanged will handle redirect on success.
+          toast({
+            title: 'Admin Account Created',
+            description: 'Your admin account has been successfully created and logged in.',
+          });
+        } catch (signUpError: any) {
+          // This error is likely for a weak password or if the email is already in use by another method.
+          toast({
+            variant: 'destructive',
+            title: 'Sign Up Failed',
+            description: signUpError.message || 'Could not create an account.',
+          });
+          setIsLoading(false);
         }
-    }, 3000); // 3-second timeout for feedback
+      } else {
+        // For other sign-in errors (network, etc.), display them
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: signInError.message,
+        });
+        setIsLoading(false);
+      }
+    }
   };
 
   if (isUserLoading || user) {
