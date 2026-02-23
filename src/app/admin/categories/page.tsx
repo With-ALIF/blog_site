@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { categories } from '@/lib/data';
+import { categories, posts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,7 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, PlusCircle } from 'lucide-react';
+import { Trash2, PlusCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 
@@ -34,8 +34,24 @@ export default function CategoriesPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
 
+  const categoryPostCounts = categories.reduce((acc, category) => {
+    acc[category] = posts.filter(p => p.category === category).length;
+    return acc;
+  }, {} as Record<string, number>);
+
   const handleDelete = () => {
     if (!categoryToDelete) return;
+    
+    if (categoryPostCounts[categoryToDelete] > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Category in Use',
+        description: 'You cannot delete a category with associated posts.',
+      });
+      setIsDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+      return;
+    }
     
     const categoryIndex = categories.findIndex(c => c === categoryToDelete);
     if (categoryIndex > -1) {
@@ -116,6 +132,7 @@ export default function CategoriesPage() {
                         <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
+                            <TableHead className="w-[100px] text-center">Posts</TableHead>
                             <TableHead className="text-right w-[100px]">Actions</TableHead>
                         </TableRow>
                         </TableHeader>
@@ -123,6 +140,12 @@ export default function CategoriesPage() {
                         {categories.map((category) => (
                             <TableRow key={category}>
                             <TableCell className="font-medium">{category}</TableCell>
+                            <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground"/>
+                                    {categoryPostCounts[category] || 0}
+                                </div>
+                            </TableCell>
                             <TableCell className="text-right">
                                 <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(category)}>
                                     <Trash2 className="h-4 w-4 text-red-600" />
@@ -143,7 +166,7 @@ export default function CategoriesPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will remove the category for the current session.
+                        This action cannot be undone. You can only delete categories that have no posts associated with them.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
