@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Clock, User, Twitter, Facebook, Linkedin, Languages, Loader2, AlertTriangle } from 'lucide-react';
+import { Clock, User, Facebook, Linkedin, Languages, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { onDemandPostTranslation } from '@/ai/flows/on-demand-post-translation';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,8 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Post } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function SocialShare({ title, url }: { title: string, url: string }) {
   const encodedTitle = encodeURIComponent(title);
@@ -24,11 +26,6 @@ function SocialShare({ title, url }: { title: string, url: string }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium text-muted-foreground">Share:</span>
-      <Button asChild variant="outline" size="icon" aria-label="Share on Twitter">
-        <a href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`} target="_blank" rel="noopener noreferrer">
-          <Twitter className="h-4 w-4" />
-        </a>
-      </Button>
       <Button asChild variant="outline" size="icon" aria-label="Share on Facebook">
         <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer">
           <Facebook className="h-4 w-4" />
@@ -154,8 +151,10 @@ export default function PostPage() {
           <Image src={post.imageUrl} alt={title} fill className="object-cover" priority data-ai-hint={post.imageHint} />
         </div>
 
-        <div className="text-lg/relaxed text-foreground/90 max-w-none mx-auto mb-8">
-          <p className="whitespace-pre-line">{content}</p>
+        <div className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto mb-8">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-8">
