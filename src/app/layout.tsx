@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/contexts/language-context';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { headers } from 'next/headers';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'ALIF BLOG',
@@ -29,14 +30,16 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat&family=Poppins:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn("font-body antialiased")}>
-        <LanguageProvider>
-          <div className="flex min-h-screen flex-col bg-background">
-            {!isAdminPage && <Header />}
-            <main className="flex-grow">{children}</main>
-            {!isAdminPage && <Footer />}
-          </div>
-          <Toaster />
-        </LanguageProvider>
+        <FirebaseClientProvider>
+          <LanguageProvider>
+            <div className="flex min-h-screen flex-col bg-background">
+              {!isAdminPage && <Header />}
+              <main className="flex-grow">{children}</main>
+              {!isAdminPage && <Footer />}
+            </div>
+            <Toaster />
+          </LanguageProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

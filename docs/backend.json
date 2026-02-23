@@ -1,261 +1,47 @@
 {
   "entities": {
-    "AuthorProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AuthorProfile",
-      "type": "object",
-      "description": "Represents the profile information of a blog author, separate from authentication details.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AuthorProfile entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the author."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the author (for display purposes or Gravatar, not for authentication).",
-          "format": "email"
-        },
-        "bio": {
-          "type": "array",
-          "description": "Bilingual biographical information about the author.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "profilePictureUrl": {
-          "type": "string",
-          "description": "URL to the author's profile picture.",
-          "format": "uri"
-        },
-        "socialLinks": {
-          "type": "array",
-          "description": "A list of social media links for the author.",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "bio"
-      ]
-    },
     "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Category",
       "type": "object",
-      "description": "Defines a category by which blog posts can be organized and filtered.",
+      "description": "Represents a blog post category.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
         "name": {
-          "type": "array",
-          "description": "Bilingual name of the category.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "slug": {
           "type": "string",
-          "description": "A URL-friendly string identifier for the category (e.g., 'tech', 'programming')."
-        },
-        "description": {
-          "type": "array",
-          "description": "Bilingual description of the category.",
-          "items": {
-            "type": "string"
-          }
+          "description": "The name of the category."
         }
       },
-      "required": [
-        "id",
-        "name",
-        "slug"
-      ]
+      "required": ["name"]
     },
     "BlogPost": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "BlogPost",
       "type": "object",
-      "description": "Represents a single blog post with bilingual content support.",
+      "description": "Represents a single blog post.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the BlogPost entity."
-        },
-        "title": {
-          "type": "array",
-          "description": "Bilingual title of the blog post.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "slug": {
-          "type": "string",
-          "description": "A URL-friendly string identifier for the blog post (e.g., 'my-first-blog-post')."
-        },
-        "excerpt": {
-          "type": "array",
-          "description": "Bilingual short summary or excerpt of the blog post content.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "content": {
-          "type": "array",
-          "description": "Bilingual full rich text content of the blog post (e.g., HTML or Markdown).",
-          "items": {
-            "type": "string"
-          }
-        },
-        "featuredImageUrl": {
-          "type": "string",
-          "description": "URL to the featured image for the blog post.",
-          "format": "uri"
-        },
-        "publishedAt": {
-          "type": "string",
-          "description": "Timestamp when the blog post was originally published.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the blog post was last updated.",
-          "format": "date-time"
-        },
-        "isFeatured": {
-          "type": "boolean",
-          "description": "Indicates if the blog post should be highlighted as a featured post."
-        },
-        "authorId": {
-          "type": "string",
-          "description": "Reference to the author of the blog post. (Relationship: AuthorProfile 1:N BlogPost)"
-        },
-        "categoryIds": {
-          "type": "array",
-          "description": "References to categories associated with this blog post. (Relationship: Category N:N BlogPost)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "seoMetaTitle": {
-          "type": "array",
-          "description": "Bilingual title for SEO purposes.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "seoMetaDescription": {
-          "type": "array",
-          "description": "Bilingual description for SEO purposes.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "tags": {
-          "type": "array",
-          "description": "Keywords or tags associated with the blog post for search and topic grouping.",
-          "items": {
-            "type": "string"
-          }
-        }
+        "slug": { "type": "string" },
+        "title_en": { "type": "string" },
+        "title_bn": { "type": "string" },
+        "excerpt_en": { "type": "string" },
+        "excerpt_bn": { "type": "string" },
+        "content_en": { "type": "string" },
+        "content_bn": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageHint": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["published", "pending"] }
       },
       "required": [
-        "id",
-        "title",
-        "slug",
-        "excerpt",
-        "content",
-        "featuredImageUrl",
-        "publishedAt",
-        "authorId",
-        "categoryIds",
-        "seoMetaTitle",
-        "seoMetaDescription"
-      ]
-    },
-    "Comment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Comment",
-      "type": "object",
-      "description": "Represents a user-submitted comment on a blog post.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Comment entity."
-        },
-        "postId": {
-          "type": "string",
-          "description": "Reference to the blog post this comment belongs to. (Relationship: BlogPost 1:N Comment)"
-        },
-        "authorName": {
-          "type": "string",
-          "description": "The name of the person who posted the comment."
-        },
-        "authorEmail": {
-          "type": "string",
-          "description": "The email address of the commenter (for gravatar or identification, not authentication).",
-          "format": "email"
-        },
-        "content": {
-          "type": "string",
-          "description": "The actual text content of the comment."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the comment was posted.",
-          "format": "date-time"
-        },
-        "isApproved": {
-          "type": "boolean",
-          "description": "Indicates if the comment has been approved by a moderator for public display."
-        },
-        "parentId": {
-          "type": "string",
-          "description": "Reference to a parent comment if this is a reply (for threaded comments). (Relationship: Comment 1:N Comment)"
-        }
-      },
-      "required": [
-        "id",
-        "postId",
-        "authorName",
-        "content",
-        "createdAt",
-        "isApproved"
+        "slug", "title_en", "title_bn", "excerpt_en", "excerpt_bn",
+        "content_en", "content_bn", "category", "author", "date", "status"
       ]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
     "structure": [
-      {
-        "path": "/authorProfiles/{authorId}",
-        "definition": {
-          "entityName": "AuthorProfile",
-          "schema": {
-            "$ref": "#/backend/entities/AuthorProfile"
-          },
-          "description": "Stores author biographical data. Publicly readable. Write access is restricted to the specific author (where `{authorId}` matches `request.auth.uid`) or administrators. This path achieves authorization independence by using the `authorId` directly from the path and the `request.auth.uid`.",
-          "params": [
-            {
-              "name": "authorId",
-              "description": "The unique identifier for the author's profile, matching the 'id' field of the AuthorProfile entity."
-            }
-          ]
-        }
-      },
       {
         "path": "/categories/{categoryId}",
         "definition": {
@@ -263,68 +49,31 @@
           "schema": {
             "$ref": "#/backend/entities/Category"
           },
-          "description": "Defines global blog post categories. Publicly readable for all users. Write access is restricted to administrators. This structure is simple and requires no denormalization for authorization beyond the admin role check.",
+          "description": "Stores blog categories. Publicly readable. Writable only by authenticated users.",
           "params": [
             {
               "name": "categoryId",
-              "description": "The unique identifier for the category, matching the 'id' field of the Category entity."
+              "description": "The unique ID for the category."
             }
           ]
         }
       },
       {
-        "path": "/blogPosts/{blogPostId}",
+        "path": "/posts/{postId}",
         "definition": {
           "entityName": "BlogPost",
           "schema": {
             "$ref": "#/backend/entities/BlogPost"
           },
-          "description": "Stores individual blog posts. Includes `authorId` for ownership and a `status` field (e.g., 'DRAFT', 'PUBLISHED') for explicit state modeling. Publicly readable only if `status` is 'PUBLISHED'. Authors can read/write their own posts (matching `resource.data.authorId` with `request.auth.uid`). Administrators can read/write all posts regardless of status. This structure supports authorization independence by embedding `authorId` and `status` directly in each document, enabling secure QAPs based on the 'status' field.",
+          "description": "Stores blog posts. Posts with 'published' status are publicly readable. All posts are writable only by authenticated users.",
           "params": [
             {
-              "name": "blogPostId",
-              "description": "The unique identifier for the blog post, matching the 'id' field of the BlogPost entity."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/blogPosts/{blogPostId}/comments/{commentId}",
-        "definition": {
-          "entityName": "Comment",
-          "schema": {
-            "$ref": "#/backend/entities/Comment"
-          },
-          "description": "Stores comments for a specific blog post. Comments are publicly readable only if `isApproved` is `true`. Any authenticated user can create a comment. Administrators and the blog post's author can approve/delete comments. This entity includes denormalized `postId` and should also include `blogPostAuthorId` to achieve authorization independence for moderation rules, allowing checks against `resource.data.blogPostAuthorId` without a parent `get()` operation. Supports QAPs by filtering on the 'isApproved' field.",
-          "params": [
-            {
-              "name": "blogPostId",
-              "description": "The unique identifier of the parent blog post."
-            },
-            {
-              "name": "commentId",
-              "description": "The unique identifier for the comment, matching the 'id' field of the Comment entity."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "adminRole",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores documents indicating administrative roles. The existence of a document at this path signifies that the `{userId}` is an administrator. This collection is used for Database Access Control (DBAC) using 'Existence over Content' for efficient authorization checks (e.g., `exists(/roles_admin/$(request.auth.uid))`).",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who has been granted administrative privileges."
+              "name": "postId",
+              "description": "The unique ID for the blog post."
             }
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure for Lingua Blog prioritizes **Authorization Independence** by denormalizing key authorization attributes directly into the documents that require them. This eliminates the need for `get()` operations in security rules, which are prone to breaking atomic writes and introduce complexity. For instance, `BlogPost` documents contain their `authorId` and a `status` field (e.g., `DRAFT`, `PUBLISHED`), allowing rules to determine read/write access based solely on the document's own data and the `request.auth.uid`. Similarly, `Comment` documents will include `postId` and `blogPostAuthorId` (denormalized) and `isApproved` to manage visibility and moderation without querying parent `BlogPost` documents.\n\n**QAPs (Query as Authorization Policies)** are supported through **Structural Segregation** and explicit state modeling. All documents within a collection (`/authorProfiles`, `/categories`, `/blogPosts`) share a homogeneous security posture. Public content, such as published blog posts and approved comments, can be securely listed by querying fields like `status: 'PUBLISHED'` or `isApproved: true`. Security rules will then automatically enforce these conditions, ensuring that users can only retrieve data they are authorized to see (e.g., `allow list: if resource.data.status == 'PUBLISHED';`). For administrative access, a dedicated `/roles_admin/{userId}` collection uses **Existence over Content** for simple and robust DBAC, allowing rules to check `exists(/roles_admin/$(request.auth.uid))` for elevated privileges. This design ensures clarity, debuggability, and scalability for security rules, aligning with all core design principles and mandates."
+    ]
   }
 }

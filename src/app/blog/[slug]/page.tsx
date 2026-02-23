@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { posts } from '@/lib/data';
 import { useLanguage } from '@/contexts/language-context';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -13,6 +12,9 @@ import { onDemandPostTranslation } from '@/ai/flows/on-demand-post-translation';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import type { Post } from '@/lib/types';
 
 type PostPageProps = {
   params: { slug: string };
@@ -46,9 +48,16 @@ function SocialShare({ title, url }: { title: string, url: string }) {
 
 export default function PostPage({ params }: PostPageProps) {
   const { slug } = params;
-  const post = posts.find(p => p.slug === slug);
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
+  
+  const firestore = useFirestore();
+  const postQuery = useMemoFirebase(() => {
+      if (!firestore || !slug) return null;
+      return query(collection(firestore, 'posts'), where('slug', '==', slug));
+  }, [firestore, slug]);
+  const { data: posts, isLoading } = useCollection<Post>(postQuery);
+  const post = posts?.[0];
 
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -57,6 +66,19 @@ export default function PostPage({ params }: PostPageProps) {
   useEffect(() => {
     setCurrentUrl(window.location.href);
   }, []);
+  
+  useEffect(() => {
+    // Reset translation when language is switched manually
+    setTranslatedContent(null);
+  }, [language]);
+
+  if (isLoading) {
+    return (
+      <div className="container flex items-center justify-center py-24">
+        <Loader2 className="h-16 w-16 animate-spin" />
+      </div>
+    );
+  }
 
   if (!post) {
     notFound();

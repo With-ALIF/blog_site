@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { categories, posts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,26 +22,39 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Trash2, PlusCircle, FileText } from 'lucide-react';
+import { Trash2, PlusCircle, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, where } from 'firebase/firestore';
+import type { Category, Post } from '@/lib/types';
 
 export default function CategoriesPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [newCategory, setNewCategory] = useState('');
+  
+  const firestore = useFirestore();
+  const categoriesCol = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+  const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCol);
 
-  const categoryPostCounts = categories.reduce((acc, category) => {
-    acc[category] = posts.filter(p => p.category === category).length;
-    return acc;
-  }, {} as Record<string, number>);
+  const postsCol = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
+  const { data: posts } = useCollection<Post>(postsCol);
+
+  const categoryPostCounts = useMemoFirebase(() => {
+    if (!categories || !posts) return {};
+    return categories.reduce((acc, category) => {
+        acc[category.name] = posts.filter(p => p.category === category.name).length;
+        return acc;
+    }, {} as Record<string, number>);
+  }, [categories, posts]);
 
   const handleDelete = () => {
-    if (!categoryToDelete) return;
+    if (!categoryToDelete || !firestore) return;
     
-    if (categoryPostCounts[categoryToDelete] > 0) {
+    if ((categoryPostCounts as Record<string, number>)[categoryToDelete.name] > 0) {
       toast({
         variant: 'destructive',
         title: 'Category in Use',
@@ -53,33 +65,29 @@ export default function CategoriesPage() {
       return;
     }
     
-    const categoryIndex = categories.findIndex(c => c === categoryToDelete);
-    if (categoryIndex > -1) {
-      categories.splice(categoryIndex, 1);
-    }
+    deleteDocumentNonBlocking(doc(firestore, 'categories', categoryToDelete.id));
     
     setIsDeleteDialogOpen(false);
     setCategoryToDelete(null);
     
     toast({
         title: 'Category Deleted',
-        description: 'The category has been removed (this is a simulation).',
+        description: 'The category has been removed.',
     });
-    
-    router.refresh();
   };
   
-  const openDeleteDialog = (category: string) => {
+  const openDeleteDialog = (category: Category) => {
     setCategoryToDelete(category);
     setIsDeleteDialogOpen(true);
   };
   
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!categoriesCol) return;
     const trimmedCategory = newCategory.trim();
     if (!trimmedCategory) return;
 
-    if (categories.find(c => c.toLowerCase() === trimmedCategory.toLowerCase())) {
+    if (categories?.find(c => c.name.toLowerCase() === trimmedCategory.toLowerCase())) {
         toast({
             variant: 'destructive',
             title: 'Category exists',
@@ -88,14 +96,13 @@ export default function CategoriesPage() {
         return;
     }
 
-    categories.push(trimmedCategory);
+    addDocumentNonBlocking(categoriesCol, { name: trimmedCategory });
     setNewCategory('');
 
     toast({
         title: 'Category Created',
         description: `The category "${trimmedCategory}" has been added.`,
     });
-    router.refresh();
   };
 
   return (
@@ -128,6 +135,11 @@ export default function CategoriesPage() {
             <Card className="shadow-sm border">
                 <h2 className="text-2xl font-bold font-headline p-6">Existing Categories</h2>
                 <div className="overflow-hidden">
+                    {isLoadingCategories ? (
+                        <div className="flex justify-center items-center p-8">
+                            <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                    ) : (
                     <Table>
                         <TableHeader>
                         <TableRow>
@@ -137,13 +149,13 @@ export default function CategoriesPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {categories.map((category) => (
-                            <TableRow key={category}>
-                            <TableCell className="font-medium">{category}</TableCell>
+                        {categories?.map((category) => (
+                            <TableRow key={category.id}>
+                            <TableCell className="font-medium">{category.name}</TableCell>
                             <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground"/>
-                                    {categoryPostCounts[category] || 0}
+                                    {(categoryPostCounts as Record<string, number>)[category.name] || 0}
                                 </div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -156,6 +168,7 @@ export default function CategoriesPage() {
                         ))}
                         </TableBody>
                     </Table>
+                    )}
                 </div>
             </Card>
         </div>

@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { posts, categories } from '@/lib/data';
-import { Post } from '@/lib/types';
+import { Post, Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -31,11 +30,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle, Tags } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle, Tags, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -44,23 +46,25 @@ export default function AdminDashboardPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
 
+  const firestore = useFirestore();
+  const postsCol = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
+  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsCol);
+  
+  const categoriesCol = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+  const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCol);
+
   const handleDelete = () => {
-    if (!postToDelete) return;
+    if (!postToDelete || !firestore) return;
     
-    const postIndex = posts.findIndex(p => p.id === postToDelete.id);
-    if (postIndex > -1) {
-      posts.splice(postIndex, 1);
-    }
+    deleteDocumentNonBlocking(doc(firestore, 'posts', postToDelete.id));
     
     setIsDeleteDialogOpen(false);
     setPostToDelete(null);
     
     toast({
         title: 'Post Deleted',
-        description: 'The blog post has been removed (this is a simulation).',
+        description: 'The blog post has been removed.',
     });
-    
-    router.refresh();
   };
   
   const openDeleteDialog = (post: Post) => {
@@ -76,10 +80,10 @@ export default function AdminDashboardPage() {
     router.push(`/admin/posts/edit/${slug}`);
   };
 
-  const totalPosts = posts.length;
-  const pendingPostsCount = posts.filter(post => post.status === 'pending').length;
+  const totalPosts = posts?.length || 0;
+  const pendingPostsCount = posts?.filter(post => post.status === 'pending').length || 0;
   const publishedPostsCount = totalPosts - pendingPostsCount;
-  const totalCategories = categories.length;
+  const totalCategories = categories?.length || 0;
 
   return (
     <>
@@ -101,7 +105,7 @@ export default function AdminDashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPosts}</div>
+            <div className="text-2xl font-bold">{isLoadingPosts ? <Loader2 className="h-6 w-6 animate-spin" /> : totalPosts}</div>
           </CardContent>
         </Card>
         <Card>
@@ -110,7 +114,7 @@ export default function AdminDashboardPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{publishedPostsCount}</div>
+            <div className="text-2xl font-bold">{isLoadingPosts ? <Loader2 className="h-6 w-6 animate-spin" /> : publishedPostsCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -119,7 +123,7 @@ export default function AdminDashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingPostsCount}</div>
+            <div className="text-2xl font-bold">{isLoadingPosts ? <Loader2 className="h-6 w-6 animate-spin" /> : pendingPostsCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -128,7 +132,7 @@ export default function AdminDashboardPage() {
             <Tags className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCategories}</div>
+            <div className="text-2xl font-bold">{isLoadingCategories ? <Loader2 className="h-6 w-6 animate-spin" /> : totalCategories}</div>
           </CardContent>
         </Card>
       </div>
@@ -138,6 +142,11 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="bg-card rounded-lg shadow-sm overflow-hidden border">
+        {isLoadingPosts ? (
+            <div className="flex justify-center items-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -149,7 +158,7 @@ export default function AdminDashboardPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {posts.map((post) => (
+            {posts?.map((post) => (
               <TableRow key={post.id}>
                 <TableCell className="font-medium max-w-xs truncate">{language === 'en' ? post.title_en : post.title_bn}</TableCell>
                 <TableCell className="hidden md:table-cell">{post.category}</TableCell>
@@ -183,6 +192,7 @@ export default function AdminDashboardPage() {
             ))}
           </TableBody>
         </Table>
+        )}
       </div>
 
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -190,7 +200,7 @@ export default function AdminDashboardPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will remove the post for the current session.
+                        This action cannot be undone. This will permanently delete the post.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

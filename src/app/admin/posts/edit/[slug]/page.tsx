@@ -2,15 +2,34 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { PostForm } from '@/components/admin/post-form';
-import { posts } from '@/lib/data';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import type { Post } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 export default function EditPostPage() {
   const params = useParams();
   const { slug } = params;
-  
-  const post = posts.find(p => p.slug === slug);
 
-  if (!post) {
+  const firestore = useFirestore();
+  const postsQuery = useMemoFirebase(() => {
+    if (!firestore || !slug) return null;
+    return query(collection(firestore, 'posts'), where('slug', '==', slug));
+  }, [firestore, slug]);
+
+  const { data: posts, isLoading } = useCollection<Post>(postsQuery);
+
+  const post = posts?.[0];
+
+  if (isLoading) {
+    return (
+        <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    );
+  }
+  
+  if (!isLoading && !post) {
     notFound();
   }
 
@@ -21,7 +40,7 @@ export default function EditPostPage() {
         <p className="text-md text-muted-foreground mt-1">Modify the details of your blog post below.</p>
       </div>
       <div className="bg-card p-6 md:p-8 rounded-lg shadow-sm border">
-        <PostForm post={post} />
+        {post && <PostForm post={post} />}
       </div>
     </div>
   );

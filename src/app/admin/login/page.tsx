@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,39 +9,50 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlifLogo } from '@/components/common/logo';
 import { Loader2 } from 'lucide-react';
+import { useAuth, useUser, initiateEmailSignIn } from '@/firebase';
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@alif.com');
+  const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/admin/dashboard');
+    }
+  }, [user, isUserLoading, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // This is a mock login. In a real application, you would
-    // validate credentials against a backend service.
+    initiateEmailSignIn(auth, email, password);
+
+    // The onAuthStateChanged listener in the provider will handle success.
+    // We can add a timeout to handle login failures.
     setTimeout(() => {
-      if (username === 'admin' && password === 'password') {
-        toast({
-          title: 'Login Successful',
-          description: 'Redirecting to admin dashboard...',
-        });
-        // In a real app, you'd probably set a session cookie
-        // and redirect to a protected admin dashboard.
-        router.push('/admin/dashboard');
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Invalid username or password.',
-        });
-        setIsLoading(false);
-      }
-    }, 1000);
+        if (!auth.currentUser) {
+            toast({
+              variant: 'destructive',
+              title: 'Login Failed',
+              description: 'Invalid email or password.',
+            });
+            setIsLoading(false);
+        }
+    }, 3000); // 3-second timeout for feedback
   };
+
+  if (isUserLoading || user) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
@@ -53,15 +64,15 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="admin@alif.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="username"
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">

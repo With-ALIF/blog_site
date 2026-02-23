@@ -4,7 +4,6 @@ import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PostCard } from '@/components/blog/post-card';
-import { posts, categories } from '@/lib/data';
 import { Post, Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,8 @@ import { useLanguage } from '@/contexts/language-context';
 import { Search, Loader2 } from 'lucide-react';
 import { semanticBlogPostSearch, SemanticBlogPostSearchOutput } from '@/ai/flows/semantic-blog-post-search-flow';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 function BlogPageContent() {
   const { language } = useLanguage();
@@ -22,8 +23,15 @@ function BlogPageContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
+  
+  const firestore = useFirestore();
+  const postsCol = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
+  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsCol);
 
-  const activeCategory = searchParams.get('category') as Category | null;
+  const categoriesCol = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+  const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCol);
+
+  const activeCategory = searchParams.get('category');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +42,10 @@ function BlogPageContent() {
     setIsSearching(true);
     setCurrentPage(1);
     try {
+      // NOTE: Semantic search still uses mock data. This should be updated in a real scenario.
       const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ query: searchQuery });
       const foundPosts = result.blogPosts
-        .map(bp => posts.find(p => p.id === bp.id))
+        .map(bp => posts?.find(p => p.id === bp.id))
         .filter((p): p is Post => Boolean(p) && p.status === 'published');
       setSearchResults(foundPosts);
       if(foundPosts.length === 0) {
@@ -57,7 +66,7 @@ function BlogPageContent() {
     }
   };
 
-  const publishedPosts = useMemo(() => posts.filter(p => p.status === 'published'), []);
+  const publishedPosts = useMemo(() => posts?.filter(p => p.status === 'published') || [], [posts]);
 
   const filteredPosts = useMemo(() => {
     if (searchResults) return searchResults;
@@ -77,6 +86,8 @@ function BlogPageContent() {
   const pageTitle = language === 'en' ? 'Blog' : 'ব্লগ';
   const allCategories = language === 'en' ? 'All' : 'সব';
 
+  const isLoading = isLoadingPosts || isLoadingCategories;
+
   return (
     <div className="container py-16 md:py-24">
       <h1 className="text-4xl md:text-5xl font-bold font-headline text-center mb-4">{pageTitle}</h1>
@@ -95,7 +106,7 @@ function BlogPageContent() {
             className="pl-10"
           />
         </div>
-        <Button type="submit" disabled={isSearching}>
+        <Button type="submit" disabled={isSearching || isLoading}>
           {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
           {language === 'en' ? 'Search' : 'অনুসন্ধান'}
         </Button>
@@ -105,14 +116,18 @@ function BlogPageContent() {
         <Button asChild variant={!activeCategory ? 'default' : 'outline'}>
           <Link href="/blog">{allCategories}</Link>
         </Button>
-        {categories.map(category => (
-          <Button asChild key={category} variant={activeCategory === category ? 'default' : 'outline'}>
-            <Link href={`/blog?category=${category}`}>{category}</Link>
+        {categories?.map(category => (
+          <Button asChild key={category.id} variant={activeCategory === category.name ? 'default' : 'outline'}>
+            <Link href={`/blog?category=${category.name}`}>{category.name}</Link>
           </Button>
         ))}
       </div>
-
-      {paginatedPosts.length > 0 ? (
+      
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-12 w-12 animate-spin" />
+        </div>
+      ) : paginatedPosts.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {paginatedPosts.map(post => (
             <PostCard key={post.id} post={post} />
@@ -144,7 +159,7 @@ function BlogPageContent() {
 
 export default function BlogPage() {
   return (
-    <Suspense fallback={<div className="container text-center py-24">Loading...</div>}>
+    <Suspense fallback={<div className="container text-center py-24"><Loader2 className="h-12 w-12 animate-spin mx-auto" /></div>}>
       <BlogPageContent />
     </Suspense>
   );

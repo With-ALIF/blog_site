@@ -3,16 +3,28 @@
 import { PostCard } from '@/components/blog/post-card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
-import { posts, heroImage } from '@/lib/data';
+import { heroImage } from '@/lib/data';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, limit } from 'firebase/firestore';
+import { Post } from '@/lib/types';
+
 
 export default function Home() {
   const { language } = useLanguage();
-  const publishedPosts = posts.filter(p => p.status === 'published');
-  const featuredPosts = publishedPosts.slice(0, 2);
-  const latestPosts = publishedPosts.slice(0, 6);
+  
+  const firestore = useFirestore();
+
+  const publishedPostsQuery = useMemoFirebase(() => 
+    firestore ? query(collection(firestore, 'posts'), where('status', '==', 'published')) : null, 
+  [firestore]);
+
+  const { data: publishedPosts, isLoading } = useCollection<Post>(publishedPostsQuery);
+
+  const featuredPosts = publishedPosts?.slice(0, 2) || [];
+  const latestPosts = publishedPosts?.slice(0, 6) || [];
 
   const heroContent = {
     en: {
@@ -59,11 +71,15 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12">
             {language === 'en' ? 'Featured Posts' : 'বৈশিষ্ট্যযুক্ত পোস্ট'}
           </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {featuredPosts.map(post => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-8">
+              {featuredPosts.map(post => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -73,11 +89,15 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12">
             {language === 'en' ? 'Latest Posts' : 'সর্বশেষ পোস্ট'}
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestPosts.map(post => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+           {isLoading ? (
+            <div className="flex justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {latestPosts.map(post => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
           <div className="text-center mt-12">
             <Button asChild variant="outline">
               <Link href="/blog">{language === 'en' ? 'View All Posts' : 'সমস্ত পোস্ট দেখুন'}</Link>

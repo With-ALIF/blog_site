@@ -1,7 +1,10 @@
 export const postStatuses = ['published', 'pending'] as const;
 export type PostStatus = (typeof postStatuses)[number];
 
-export type Category = string;
+export interface Category {
+  id: string;
+  name: string;
+}
 
 export interface Post {
   id: string;
@@ -14,7 +17,7 @@ export interface Post {
   content_bn: string;
   imageUrl: string;
   imageHint: string;
-  category: Category;
+  category: string;
   author: string;
   date: string; // ISO 8601 format
   status: PostStatus;

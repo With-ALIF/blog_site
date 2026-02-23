@@ -1,174 +1,20 @@
-/**
- * # Firestore Security Rules: Lingua Blog
- *
- * ## Core Philosophy
- * This ruleset enforces a multi-tiered access model designed for a public-facing blog with administrative oversight. The primary goals are to ensure that content is publicly accessible only after explicit approval or publication, that authors retain exclusive control over their own content, and that administrators have comprehensive moderation capabilities. The rules prioritize "Authorization Independence" by requiring key authorization data (like `authorId` or `isApproved`) to be denormalized directly onto the documents being secured, which prevents slow and costly `get()` calls.
- *
- * ## Data Structure
- * The data is organized into several top-level collections:
- * - `/authorProfiles`: Publicly readable author bios, writable only by the respective author.
- * - `/categories`: Publicly readable content categories, writable only by administrators.
- * - `/blogPosts`: The core content. These are only readable by their author until they are explicitly marked as 'PUBLISHED'.
- * - `/roles_admin`: A private, lookup-only collection to designate administrators. Client access is completely forbidden.
- *
- * Blog posts can have a subcollection for comments:
- * - `/blogPosts/{blogPostId}/comments`: User-submitted comments. They are publicly readable only after being approved by a moderator.
- *
- * ## Key Security Decisions
- * - **Admin Supremacy**: A user whose UID exists in the `/roles_admin` collection has full read/write access to all data for moderation and management purposes. This collection itself is inaccessible from the client.
- * - **Default to Private**: Blog posts and comments are private by default. They only become publicly visible when a specific field is changed (e.g., a post's `status` becomes 'PUBLISHED' or a comment's `isApproved` becomes `true`).
- * - **Strict Ownership**: Authors can only create, update, or delete their own profiles and blog posts. Ownership is determined by an `authorId` field on the document, which must match the authenticated user's UID.
- * - **Open Comment Submission**: Any authenticated user can submit a comment, but it will not be visible to the public until an admin or the post's original author approves it.
- *
- * ## Denormalization for Authorization
- * To create simple, performant rules, this security model relies on denormalization:
- * - **`blogPosts.authorId`**: Each blog post must store its author's UID directly, enabling a simple ownership check (`resource.data.authorId == request.auth.uid`).
- * - **`comments.blogPostAuthorId`**: To allow post authors to moderate comments without an extra database read, each comment document is expected to store the UID of the parent blog post's author. This allows a direct check against the incoming user's identity.
- *
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    //-------------------------------------------------------------------------
-    // Helper Functions
-    //-------------------------------------------------------------------------
-
-    /**
-     * Checks if a user is authenticated.
-     */
+    
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user has an administrator role.
-     * This is determined by the existence of a document in the /roles_admin collection.
-     */
-    function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
-
-    /**
-     * Checks if the requesting user's UID matches the provided userId.
-     * This is the primary function for enforcing document ownership.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-    
-    /**
-     * Checks if the document being accessed already exists.
-     * Crucial for preventing updates or deletes on non-existent documents.
-     */
-    function isExistingDoc() {
-      return resource != null;
-    }
-
-    /**
-     * Combines an ownership check with an existence check.
-     * Ensures that update/delete operations target an existing document owned by the user.
-     */
-    function isOwnerOfExistingDoc(ownerId) {
-      return isOwner(ownerId) && isExistingDoc();
-    }
-    
-    //-------------------------------------------------------------------------
-    // Collection Rules
-    //-------------------------------------------------------------------------
-
-    /**
-     * @description A private collection for administrator role management.
-     * The existence of a document signifies admin privileges.
-     * This collection MUST NOT be readable or writable by any client.
-     * @path /roles_admin/{userId}
-     * @allow (none) - All client-side requests are denied.
-     * @deny (any) user attempts to read or write to this collection.
-     * @principle Secures the role-based access control mechanism by making it a read-only lookup table for security rules themselves.
-     */
-    match /roles_admin/{userId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Author profiles are publicly readable biographical data.
-     * Only the author themselves or an admin can create, update, or delete their profile.
-     * @path /authorProfiles/{authorId}
-     * @allow (get) Any user, signed in or not, can read an author's profile.
-     * @allow (create) An authenticated user with UID 'user123' creates their own profile at `/authorProfiles/user123`.
-     * @deny (update) A user with UID 'user456' tries to update the profile at `/authorProfiles/user123`.
-     * @principle Enforces a "Public Read, Owner Write" pattern, securing personal data while allowing it to be displayed publicly.
-     */
-    match /authorProfiles/{authorId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isOwner(authorId) && request.resource.data.id == authorId;
-      allow update: if (isOwnerOfExistingDoc(authorId) && request.resource.data.id == resource.data.id) || (isAdmin() && isExistingDoc());
-      allow delete: if isOwnerOfExistingDoc(authorId) || (isAdmin() && isExistingDoc());
-    }
-
-    /**
-     * @description Blog categories are global and publicly readable.
-     * Only administrators are permitted to create, modify, or delete categories to ensure consistency.
-     * @path /categories/{categoryId}
-     * @allow (list) Any user, signed in or not, can list all available categories.
-     * @allow (create) An administrator creates a new category.
-     * @deny (create) A regular, non-admin user attempts to create a new category.
-     * @principle Implements role-based access for administrative tasks on public data.
-     */
     match /categories/{categoryId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && isExistingDoc();
-      allow delete: if isAdmin() && isExistingDoc();
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description Stores individual blog posts. Access is strictly controlled.
-     * An author can manage their own posts. Admins can manage any post.
-     * Public visibility depends on a 'status' field, which is currently missing from the schema.
-     * @path /blogPosts/{blogPostId}
-     * @allow (get) Author 'user123' reads their own post.
-     * @deny (get) Public user 'user456' tries to read post authored by 'user123'. This is denied pending schema update.
-     * @principle Enforces strict ownership. Public access is disabled until the schema supports it.
-     */
-    match /blogPosts/{blogPostId} {
-      // CRITICAL: Public access rules cannot be implemented. The 'BlogPost' entity is missing a 'status' field (e.g., 'DRAFT', 'PUBLISHED').
-      // TODO: Add `|| resource.data.status == 'PUBLISHED'` to the get rule once the schema is updated.
-      allow get: if isOwner(resource.data.authorId) || isAdmin();
-      // TODO: Public listing should be enabled for queries once the 'status' field exists to filter for published posts. Currently restricted for security.
-      allow list: if isAdmin();
-      allow create: if isOwner(request.resource.data.authorId);
-      allow update: if (isOwnerOfExistingDoc(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId) || (isAdmin() && isExistingDoc());
-      allow delete: if isOwnerOfExistingDoc(resource.data.authorId) || (isAdmin() && isExistingDoc());
-
-      /**
-       * @description Comments on a blog post.
-       * Comments are publicly readable only if approved. Anyone signed in can create a comment (which starts as unapproved).
-       * The original post author or an admin can moderate (approve, edit, delete) comments.
-       * @path /blogPosts/{blogPostId}/comments/{commentId}
-       * @allow (create) Any authenticated user posts a new comment.
-       * @allow (get) Any user reads a comment where `isApproved == true`.
-       * @allow (update) The author of the parent blog post sets `isApproved` to `true` on a comment.
-       * @deny (get) Any user tries to read a comment where `isApproved == false`.
-       * @deny (delete) A random user tries to delete another user's comment.
-       * @principle Implements a moderation queue. Content is submittable by many but only visible after approval by a privileged user (owner/admin). Relies on denormalized `blogPostAuthorId` for efficient moderation checks.
-       */
-      match /comments/{commentId} {
-        // ASSUMPTION: The `Comment` document contains a denormalized `blogPostAuthorId` field for efficient moderation checks.
-        allow get: if resource.data.isApproved == true || isOwner(resource.data.blogPostAuthorId) || isAdmin();
-        allow list: if true;
-        allow create: if isSignedIn() 
-                      && request.resource.data.postId == blogPostId
-                      && request.resource.data.isApproved == false;
-        allow update: if (isOwnerOfExistingDoc(resource.data.blogPostAuthorId) && request.resource.data.postId == resource.data.postId) || (isAdmin() && isExistingDoc());
-        allow delete: if isOwnerOfExistingDoc(resource.data.blogPostAuthorId) || (isAdmin() && isExistingDoc());
-      }
+    match /posts/{postId} {
+      allow get: if resource.data.status == 'published' || isSignedIn();
+      allow list: if true;
+      allow write: if isSignedIn();
     }
   }
 }

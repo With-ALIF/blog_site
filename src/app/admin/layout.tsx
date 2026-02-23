@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -13,18 +14,42 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Tags, PlusCircle, Home } from 'lucide-react';
+import { LayoutDashboard, Tags, PlusCircle, Home, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AlifLogo } from '@/components/common/logo';
+import { useUser, useAuth } from '@/firebase';
+import { useEffect } from 'react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  useEffect(() => {
+    if (!isUserLoading && !user && pathname !== '/admin/login') {
+      router.push('/admin/login');
+    }
+  }, [isUserLoading, user, pathname, router]);
 
   // Hide layout on login page
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
+
+  if (isUserLoading || !user) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin" />
+        </div>
+    );
+  }
+
+  const handleLogout = () => {
+    auth.signOut();
+    router.push('/admin/login');
+  };
 
   // Check if a menu item is active
   const isActive = (path: string) => {
@@ -83,6 +108,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Home />
                         Back to Site
                     </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout}>
+                    <LogOut />
+                    Logout
                 </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

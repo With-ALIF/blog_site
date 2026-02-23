@@ -6,16 +6,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Post, postStatuses } from '@/lib/types';
-import { categories } from '@/lib/data';
+import { Post, postStatuses, Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { posts } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
 const formSchema = z.object({
   title_en: z.string().min(2, { message: 'English title must be at least 2 characters.' }),
@@ -42,6 +42,10 @@ export function PostForm({ post }: PostFormProps) {
   const { toast } = useToast();
   const isEditing = !!post;
   
+  const firestore = useFirestore();
+  const categoriesCol = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+  const { data: categories } = useCollection<Category>(categoriesCol);
+  
   const [imagePreview, setImagePreview] = useState<string | null>(post?.imageUrl || null);
 
   const form = useForm<PostFormValues>({
@@ -53,7 +57,7 @@ export function PostForm({ post }: PostFormProps) {
       excerpt_bn: post?.excerpt_bn || '',
       content_en: post?.content_en || '',
       content_bn: post?.content_bn || '',
-      category: post?.category || categories[0] || '',
+      category: post?.category || categories?.[0]?.name || '',
       author: post?.author || 'Admin',
       status: post?.status || 'pending',
       imageUrl: post?.imageUrl || '',
@@ -62,37 +66,29 @@ export function PostForm({ post }: PostFormProps) {
   });
 
   function onSubmit(values: PostFormValues) {
+    if (!firestore) return;
     const slug = values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     
-    // This is a mock submission that mutates the in-memory array.
+    const postData = {
+        ...values,
+        slug,
+        imageUrl: values.imageUrl || `https://picsum.photos/seed/${Math.random()}/1200/800`,
+        imageHint: values.imageHint || 'abstract placeholder',
+    };
+
     if (isEditing && post) {
-        const postIndex = posts.findIndex(p => p.id === post.id);
-        if (postIndex !== -1) {
-            posts[postIndex] = {
-                ...posts[postIndex],
-                ...values,
-                slug,
-                imageUrl: values.imageUrl || posts[postIndex].imageUrl,
-                imageHint: values.imageHint || posts[postIndex].imageHint || 'abstract placeholder'
-            };
-        }
+        const postRef = doc(firestore, 'posts', post.id);
+        setDocumentNonBlocking(postRef, { ...postData, date: post.date }, { merge: true });
         toast({
             title: 'Post Updated!',
-            description: 'Your blog post has been successfully updated (simulation).',
+            description: 'Your blog post has been successfully updated.',
         });
     } else {
-        const newPost: Post = {
-            id: String(Date.now()),
-            date: new Date().toISOString(),
-            ...values,
-            slug,
-            imageUrl: values.imageUrl || `https://picsum.photos/seed/${Math.random()}/1200/800`,
-            imageHint: values.imageHint || 'abstract placeholder',
-        };
-        posts.unshift(newPost);
+        const postsCol = collection(firestore, 'posts');
+        addDocumentNonBlocking(postsCol, { ...postData, date: new Date().toISOString() });
         toast({
             title: 'Post Created!',
-            description: 'Your new blog post has been successfully created (simulation).',
+            description: 'Your new blog post has been successfully created.',
         });
     }
     
@@ -204,7 +200,7 @@ export function PostForm({ post }: PostFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                      {categories?.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -234,7 +230,7 @@ export function PostForm({ post }: PostFormProps) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
                       {postStatuses.map(status => <SelectItem key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>)}
