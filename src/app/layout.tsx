@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/footer';
 import { LanguageProvider } from '@/contexts/language-context';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'ALIF BLOG',
@@ -16,6 +17,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = headers();
+  const pathname = headersList.get('next-url') || '';
+  const isAdminPage = pathname.startsWith('/admin');
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -26,9 +31,9 @@ export default function RootLayout({
       <body className={cn("font-body antialiased")}>
         <LanguageProvider>
           <div className="flex min-h-screen flex-col bg-background">
-            <Header />
+            {!isAdminPage && <Header />}
             <main className="flex-grow">{children}</main>
-            <Footer />
+            {!isAdminPage && <Footer />}
           </div>
           <Toaster />
         </LanguageProvider>
