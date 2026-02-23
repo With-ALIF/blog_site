@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
@@ -210,10 +210,11 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
 }
 
 export default function PostPage() {
-  const params = use(useParams());
+  const params = useParams();
   const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) as string;
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
+  const { user } = useUser();
   
   const firestore = useFirestore();
   const postQuery = useMemoFirebase(() => {
@@ -222,7 +223,7 @@ export default function PostPage() {
   }, [firestore, slug]);
   
   const { data: posts, isLoading, error } = useCollection<Post>(postQuery);
-  const post = posts?.find(p => p.status === 'published' || (p.status !== 'published' && !!use(useUser)?.user));
+  const post = posts?.find(p => p.status === 'published' || (p.status !== 'published' && !!user));
 
 
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
