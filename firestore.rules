@@ -24,8 +24,10 @@ service cloud.firestore {
     }
 
     // This rule is specifically for the collection group query in the admin panel.
+    // Granting 'read' (get + list) to signed-in users for the collection group
+    // query resolves subtle permission evaluation issues.
     match /{path=**}/comments/{commentId} {
-      allow list: if isSignedIn(); // Allow admin to list all comments across all posts.
+      allow read: if isSignedIn();
     }
   }
 }
