@@ -8,15 +8,15 @@ export default function AboutPage() {
   const content = {
     en: {
       title: 'About ALIF BLOG',
-      p1: 'ALIF BLOG is a creative space dedicated to bridging cultures and knowledge through language. We believe in the power of words to connect people, and our mission is to provide high-quality content in both English and Bangla.',
-      p2: 'Our articles span across Technology, Education, Programming, and Lifestyle, offering fresh perspectives and valuable insights. We are a team of passionate writers, developers, and language enthusiasts committed to creating a seamless and enriching bilingual experience for our readers.',
-      p3: 'Thank you for joining us on this journey. We hope you find our content inspiring and informative.'
+      p1: 'I am Alif, an engineering student and a passionate coder who loves building things with code. Programming and web development are my primary areas of focus, and I continuously strive to improve my skills by learning new technologies, solving real-world problems, and working on practical projects.',
+      p2: 'This blog is fully dedicated to coding, programming tutorials, web development, and problem-solving content.',
+      p3: 'My goal is to simplify complex concepts and share knowledge in a clear and beginner-friendly way, helping others confidently start and grow in their programming journey.'
     },
     bn: {
       title: 'আলিফ ব্লগ সম্পর্কে',
-      p1: 'আলিফ ব্লগ হল ভাষার মাধ্যমে সংস্কৃতি এবং জ্ঞানকে সংযুক্ত করার জন্য নিবেদিত একটি সৃজনশীল স্থান। আমরা মানুষকে সংযুক্ত করার জন্য শব্দের শক্তিতে বিশ্বাস করি, এবং আমাদের লক্ষ্য হল ইংরেজি এবং বাংলা উভয় ভাষায় উচ্চ-মানের সামগ্রী সরবরাহ করা।',
-      p2: 'আমাদের নিবন্ধগুলি প্রযুক্তি, শিক্ষা, প্রোগ্রামিং এবং জীবনধারা জুড়ে বিস্তৃত, যা নতুন দৃষ্টিকোণ এবং মূল্যবান অন্তর্দৃষ্টি প্রদান করে। আমরা আমাদের পাঠকদের জন্য একটি নির্বিঘ্ন এবং সমৃদ্ধ দ্বিভাষিক অভিজ্ঞতা তৈরি করতে প্রতিশ্রুতিবদ্ধ উত্সাহী লেখক, বিকাশকারী এবং ভাষা উত্সাহীদের একটি দল।',
-      p3: 'এই যাত্রায় আমাদের সাথে যোগ দেওয়ার জন্য আপনাকে ধন্যবাদ। আমরা আশা করি আপনি আমাদের সামগ্রী অনুপ্রেরণামূলক এবং তথ্যপূর্ণ পাবেন।'
+      p1: 'আমি আলিফ, একজন ইঞ্জিনিয়ারিং স্টুডেন্ট এবং প্যাশনেট কোডার। প্রোগ্রামিং ও ওয়েব ডেভেলপমেন্ট আমার শেখার এবং কাজের প্রধান ক্ষেত্র। নতুন প্রযুক্তি শেখা, সমস্যা সমাধান করা এবং বাস্তব প্রজেক্ট তৈরি করার মাধ্যমে প্রতিদিন নিজেকে উন্নত করার চেষ্টা করি।',
+      p2: 'এই ব্লগটি সম্পূর্ণভাবে কোডিং, প্রোগ্রামিং টিউটোরিয়াল, ওয়েব ডেভেলপমেন্ট এবং সমস্যা সমাধানভিত্তিক কনটেন্ট নিয়ে তৈরি।',
+      p3: 'আমার লক্ষ্য হলো বাংলা ভাষায় সহজ ও পরিষ্কারভাবে কোডিং শেখানো, যাতে নতুন শিক্ষার্থীরা আত্মবিশ্বাসের সাথে তাদের প্রোগ্রামিং যাত্রা শুরু করতে পারে।'
     }
   };
   
