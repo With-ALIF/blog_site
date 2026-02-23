@@ -7,14 +7,15 @@ import { collection, query, where } from 'firebase/firestore';
 import type { Post } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
-export default function EditPostPage() {
+export default function EditPostPage({}: {}) {
   const params = useParams();
   const { slug } = params;
 
   const firestore = useFirestore();
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
-    return query(collection(firestore, 'posts'), where('slug', '==', slug));
+    const slugValue = Array.isArray(slug) ? slug[0] : slug;
+    return query(collection(firestore, 'posts'), where('slug', '==', slugValue));
   }, [firestore, slug]);
 
   const { data: posts, isLoading } = useCollection<Post>(postsQuery);

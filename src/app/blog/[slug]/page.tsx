@@ -40,9 +40,9 @@ function SocialShare({ title, url }: { title: string, url: string }) {
   );
 }
 
-export default function PostPage() {
+export default function PostPage({}: {}) {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) as string;
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
   
