@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import {
@@ -47,7 +45,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = () => {
-    auth.signOut();
+    if (auth) {
+      auth.signOut();
+    }
     router.push('/admin/login');
   };
 
@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen w-full bg-muted/30">
       <SidebarProvider>
-        <Sidebar>
+        <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link href="/admin/dashboard" className="block p-2">
               <AlifLogo className="h-10 w-28" />
@@ -122,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         
         <SidebarInset>
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-40">
-                <SidebarTrigger className="md:hidden" />
+                <SidebarTrigger />
                 <div className="w-full flex-1">
                     {/* Can be used for search or breadcrumbs later */}
                 </div>
