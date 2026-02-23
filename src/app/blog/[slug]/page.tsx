@@ -93,9 +93,18 @@ export default function PostPage() {
     );
   }
 
-  if (!post) {
+  if (!post && !isLoading) {
     notFound();
   }
+  
+  if (!post) {
+      return (
+          <div className="container flex items-center justify-center py-24">
+            <Loader2 className="h-16 w-16 animate-spin" />
+          </div>
+      );
+  }
+
 
   const handleTranslate = async () => {
     setIsTranslating(true);
@@ -145,8 +154,8 @@ export default function PostPage() {
           <Image src={post.imageUrl} alt={title} fill className="object-cover" priority data-ai-hint={post.imageHint} />
         </div>
 
-        <div className="text-lg/relaxed space-y-6 text-foreground/90 max-w-none mx-auto mb-8">
-          <p>{content}</p>
+        <div className="text-lg/relaxed text-foreground/90 max-w-none mx-auto mb-8">
+          <p className="whitespace-pre-line">{content}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-8">
