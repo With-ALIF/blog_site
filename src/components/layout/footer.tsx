@@ -1,10 +1,17 @@
+'use client';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Github } from 'lucide-react';
 import { AlifLogo } from '../common/logo';
+import { usePathname } from 'next/navigation';
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
+  
   return (
     <footer className="border-t bg-card">
       <div className="container py-12">

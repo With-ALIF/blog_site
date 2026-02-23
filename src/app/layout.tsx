@@ -35,7 +35,7 @@ export default function RootLayout({
             <div className="flex min-h-screen flex-col bg-background">
               {!isAdminPage && <Header />}
               <main className="flex-grow">{children}</main>
-              {!isAdminPage && <Footer />}
+              <Footer />
             </div>
             <Toaster />
           </LanguageProvider>
