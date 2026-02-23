@@ -13,7 +13,7 @@ export function Footer() {
             <AlifLogo className="h-14 w-28 mb-2" />
             <p className="text-muted-foreground mb-4 max-w-sm">A modern, responsive bilingual blog exploring tech, education, and lifestyle. Your daily dose of insights in Bangla and English.</p>
             <div className="flex space-x-4">
-              <Link href="#" aria-label="GitHub"><Github className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" /></Link>
+              <Link href="https://github.com/With-ALIF" aria-label="GitHub"><Github className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" /></Link>
               <Link href="#" aria-label="LinkedIn"><Linkedin className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" /></Link>
             </div>
           </div>
