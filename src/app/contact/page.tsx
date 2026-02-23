@@ -34,7 +34,7 @@ export default function ContactPage() {
             </div>
             <div>
               <h3 className="font-semibold text-lg font-headline">Email</h3>
-              <p className="text-muted-foreground">hello@alifblog.com</p>
+              <p className="text-muted-foreground">alif@mnr.bd</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
@@ -43,7 +43,7 @@ export default function ContactPage() {
             </div>
             <div>
               <h3 className="font-semibold text-lg font-headline">Phone</h3>
-              <p className="text-muted-foreground">+1 (555) 123-4567</p>
+              <p className="text-muted-foreground">+8801328571768</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
@@ -52,7 +52,7 @@ export default function ContactPage() {
             </div>
             <div>
               <h3 className="font-semibold text-lg font-headline">Office</h3>
-              <p className="text-muted-foreground">123 Language Lane, Dhaka, Bangladesh</p>
+              <p className="text-muted-foreground">Rangpur, Bangladesh</p>
             </div>
           </div>
         </div>
