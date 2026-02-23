@@ -16,18 +16,17 @@ service cloud.firestore {
       allow list: if true;
       allow write: if isSignedIn();
 
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if true;
-        allow delete: if isSignedIn();
-      }
+      // Comment rules are now handled by the collection group match below to avoid conflicts.
     }
 
-    // This rule is specifically for the collection group query in the admin panel.
-    // Granting 'read' (get + list) to signed-in users for the collection group
-    // query resolves subtle permission evaluation issues.
+    // This single rule governs all access to comments.
     match /{path=**}/comments/{commentId} {
-      allow read: if isSignedIn();
+      // Allow public reads for blog post pages (list, get) and admin reads for the collection group query.
+      allow read: if true;
+      // Allow anyone to create a comment.
+      allow create: if true;
+      // Allow only signed-in users (admins) to delete comments.
+      allow delete: if isSignedIn();
     }
   }
 }
