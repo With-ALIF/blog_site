@@ -230,7 +230,7 @@ export function PostForm({ post }: PostFormProps) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {postStatuses.map(status => <SelectItem key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>)}
