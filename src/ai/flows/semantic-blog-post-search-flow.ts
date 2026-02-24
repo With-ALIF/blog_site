@@ -77,11 +77,11 @@ const getEmbedding = async (text: string): Promise<number[]> => {
     model: 'text-embedding-004',
     content: text,
   });
-  // Ensure that embedResponse.embedding.text exists before returning
-  if (!embedResponse.embedding?.text) {
+  // Ensure that embedResponse.embedding exists before returning
+  if (!embedResponse.embedding) {
     throw new Error('Failed to generate embedding for text.');
   }
-  return embedResponse.embedding.text;
+  return embedResponse.embedding;
 };
 
 /**
