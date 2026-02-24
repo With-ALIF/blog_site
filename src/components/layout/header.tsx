@@ -3,7 +3,7 @@ import { ThemeToggle } from './theme-toggle';
 import { LanguageToggle } from '../common/language-toggle';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { AlifLogo } from '../common/logo';
 
 const navLinks = [
@@ -42,6 +42,7 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left">
+                <SheetTitle className="sr-only">Main Menu</SheetTitle>
                 <Link href="/" className="mr-6 flex items-center space-x-2 mb-6">
                   <AlifLogo className="h-10 w-20" />
                 </Link>
