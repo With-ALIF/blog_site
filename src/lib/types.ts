@@ -1,4 +1,4 @@
-export const postStatuses = ['published', 'pending', 'scheduled'] as const;
+export const postStatuses = ['published', 'scheduled'] as const;
 export type PostStatus = (typeof postStatuses)[number];
 
 export interface Category {

@@ -68,7 +68,7 @@ export function PostForm({ post }: PostFormProps) {
       content_bn: post?.content_bn || '',
       category: post?.category || categories?.[0]?.name || '',
       author: post?.author || 'Admin',
-      status: post?.status || 'pending',
+      status: post?.status || 'published',
       date: post ? new Date(post.date) : new Date(),
       imageUrl: post?.imageUrl || '',
       imageHint: post?.imageHint || '',
