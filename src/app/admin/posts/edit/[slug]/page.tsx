@@ -37,7 +37,7 @@ export default function EditPostPage({}: {}) {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold font-headline">Edit Post</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold font-headline">Edit Post</h1>
         <p className="text-md text-muted-foreground mt-1">Modify the details of your blog post below.</p>
       </div>
       <div className="bg-card p-6 md:p-8 rounded-lg shadow-sm border">

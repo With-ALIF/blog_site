@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import type { Post, Comment } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ReactMarkdown from 'react-markdown';
@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Trash2 } from 'lucide-react';
 
 
 function SocialShare({ title, url }: { title: string, url: string }) {
@@ -157,12 +158,33 @@ function CommentForm({ postId, postTitle, language }: { postId: string; postTitl
 
 function CommentList({ postId, language }: { postId: string; language: 'en' | 'bn'}) {
     const firestore = useFirestore();
+    const { user } = useUser(); // To check if the current user is an admin
+    const { toast } = useToast();
+
     const commentsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'posts', postId, 'comments'), orderBy('createdAt', 'desc'));
     }, [firestore, postId]);
     
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
+    
+    const handleDeleteComment = async (commentId: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'posts', postId, 'comments', commentId));
+            toast({
+                title: language === 'en' ? 'Comment Deleted' : 'মন্তব্য মুছে ফেলা হয়েছে',
+                description: language === 'en' ? 'The comment has been removed.' : 'মন্তব্যটি সরানো হয়েছে।',
+            });
+        } catch (e) {
+             toast({
+                variant: 'destructive',
+                title: language === 'en' ? 'Error' : 'ত্রুটি',
+                description: language === 'en' ? 'Could not delete the comment.' : 'মন্তব্যটি মোছা যায়নি।',
+            });
+        }
+    }
+
 
     const content = {
         en: {
@@ -189,7 +211,7 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
                 {error && <p className="text-destructive">{content[language].error}</p>}
                 {!isLoading && !error && comments?.length === 0 && <p className="text-muted-foreground">{content[language].noComments}</p>}
                 {comments?.map(comment => (
-                    <div key={comment.id} className="flex gap-4">
+                    <div key={comment.id} className="flex gap-4 group">
                         <Avatar>
                             <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.authorName}`} alt={comment.authorName} />
                             <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
@@ -197,7 +219,19 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
                         <div className="flex-1">
                            <div className="flex justify-between items-center">
                                 <p className="font-semibold">{comment.authorName}</p>
-                                <p className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), 'MMM d, yyyy')}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), 'MMM d, yyyy')}</p>
+                                    {user && (
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => handleDeleteComment(comment.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    )}
+                                </div>
                            </div>
                            <p className="text-sm text-foreground/90 mt-1">{comment.content}</p>
                         </div>
@@ -315,7 +349,7 @@ export default function PostPage() {
       <article>
         <header className="mb-8">
           <Badge variant="secondary" className="mb-4">{post.category}</Badge>
-          <h1 className="font-headline text-3xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
+          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
             <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
             <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>

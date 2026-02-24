@@ -22,7 +22,7 @@ export default function ContactPage() {
   return (
     <div className="container py-16 md:py-24">
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-bold font-headline mb-4">{content[language].title}</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold font-headline mb-4">{content[language].title}</h1>
         <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">{content[language].subtitle}</p>
       </div>
 

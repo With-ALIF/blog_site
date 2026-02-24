@@ -60,7 +60,7 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-3xl px-4">
-          <h1 className="text-4xl md:text-6xl font-bold font-headline mb-4 leading-tight shadow-lg">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-headline mb-4 leading-tight shadow-lg">
             {heroContent[language].headline}
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
@@ -75,7 +75,7 @@ export default function Home() {
       {/* Featured Posts */}
       <section className="py-16 md:py-24">
         <div className="container">
-          <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center mb-12">
             {language === 'en' ? 'Featured Posts' : 'বৈশিষ্ট্যযুক্ত পোস্ট'}
           </h2>
           {isLoading ? (
@@ -93,7 +93,7 @@ export default function Home() {
       {/* Latest Posts */}
       <section className="py-16 md:py-24 bg-card/50">
         <div className="container">
-          <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center mb-12">
             {language === 'en' ? 'Latest Posts' : 'সর্বশেষ পোস্ট'}
           </h2>
            {isLoading ? (

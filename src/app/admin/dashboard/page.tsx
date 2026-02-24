@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
     <>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-            <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-headline">Dashboard</h1>
             <p className="text-muted-foreground mt-1">An overview of your blog's content.</p>
         </div>
         <Button onClick={handleCreate} className="w-full md:w-auto">
@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
       </div>
       
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold font-headline">Manage Posts</h2>
+        <h2 className="text-xl sm:text-2xl font-bold font-headline">Manage Posts</h2>
       </div>
 
       <div className="bg-card rounded-lg shadow-sm overflow-hidden border">

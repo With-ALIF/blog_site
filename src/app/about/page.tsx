@@ -23,7 +23,7 @@ export default function AboutPage() {
   return (
     <div className="container max-w-4xl py-16 md:py-24">
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-bold font-headline mb-4">{content[language].title}</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold font-headline mb-4">{content[language].title}</h1>
       </div>
       <div className="relative aspect-video rounded-lg overflow-hidden my-12 shadow-lg">
         <Image src="https://picsum.photos/seed/about/1200/675" alt="Team working together" fill className="object-cover" data-ai-hint="team collaboration" />

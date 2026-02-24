@@ -110,7 +110,7 @@ export default function CategoriesPage() {
       <div>
         <div className="flex justify-between items-center mb-8">
           <div>
-              <h1 className="text-3xl md:text-4xl font-bold font-headline">Manage Categories</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold font-headline">Manage Categories</h1>
               <p className="text-md text-muted-foreground mt-1">Add or remove blog categories.</p>
           </div>
         </div>

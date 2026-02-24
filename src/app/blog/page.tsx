@@ -99,7 +99,7 @@ function BlogPageContent() {
 
   return (
     <div className="container py-16 md:py-24">
-      <h1 className="text-4xl md:text-5xl font-bold font-headline text-center mb-4">{pageTitle}</h1>
+      <h1 className="text-4xl sm:text-5xl font-bold font-headline text-center mb-4">{pageTitle}</h1>
       <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
         {language === 'en' ? 'Insights on Tech, Education, and Lifestyle.' : 'প্রযুক্তি, শিক্ষা, এবং জীবনধারা নিয়ে অন্তর্দৃষ্টি।'}
       </p>
