@@ -51,7 +51,7 @@ function BlogPageContent() {
       const searchablePosts = publishedPosts.map(p => ({
         id: p.id,
         title: language === 'en' ? p.title_en : p.title_bn,
-        content: language === 'en' ? p.content_en : p.content_bn,
+        content: language === 'en' ? p.excerpt_en : p.excerpt_bn,
       }));
       
       const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ 

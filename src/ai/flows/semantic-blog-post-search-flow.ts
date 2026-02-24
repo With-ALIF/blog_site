@@ -17,7 +17,7 @@ import { z } from 'genkit';
 const BlogPostSchema = z.object({
   id: z.string().describe('Unique identifier for the blog post.'),
   title: z.string().describe('The title of the blog post.'),
-  content: z.string().describe('The full content of the blog post.'),
+  content: z.string().describe('The excerpt of the blog post.'),
 });
 
 // Define the input schema for the semantic search flow
@@ -73,15 +73,26 @@ const blogPostEmbeddingsCache: Record<string, number[]> = {};
  * @returns A promise that resolves to the embedding vector.
  */
 const getEmbedding = async (text: string): Promise<number[]> => {
-  const embedResponse = await ai.embed({
-    model: 'text-embedding-004',
-    content: text,
-  });
-  // Ensure that embedResponse.embedding exists before returning
-  if (!embedResponse.embedding) {
-    throw new Error('Failed to generate embedding for text.');
+  if (!text || !text.trim()) {
+    // Return an empty array for empty input to avoid errors.
+    return [];
   }
-  return embedResponse.embedding;
+  try {
+    const embedResponse = await ai.embed({
+      model: 'text-embedding-004',
+      content: text,
+    });
+    // Ensure that embedResponse.embedding exists before returning
+    if (!embedResponse.embedding) {
+      console.warn('Failed to generate embedding for text, returning empty vector.');
+      return [];
+    }
+    return embedResponse.embedding;
+  } catch (error) {
+      console.error("Error in getEmbedding:", error);
+      // Return empty vector on error to prevent crash
+      return [];
+  }
 };
 
 /**
