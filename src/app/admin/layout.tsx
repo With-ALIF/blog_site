@@ -11,8 +11,9 @@ import {
   SidebarHeader,
   SidebarFooter,
   SidebarTrigger,
+  SheetTitle,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Tags, PlusCircle, Home, LogOut, Loader2, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Tags, PlusCircle, Home, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AlifLogo } from '@/components/common/logo';
@@ -71,6 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin/dashboard" className="block p-2">
               <AlifLogo className="h-10 w-28" />
             </Link>
+            <SheetTitle className="sr-only">Admin Menu</SheetTitle>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
@@ -87,14 +89,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link href="/admin/categories">
                     <Tags />
                     Categories
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/admin/comments')}>
-                  <Link href="/admin/comments">
-                    <MessageSquare />
-                    Comments
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
