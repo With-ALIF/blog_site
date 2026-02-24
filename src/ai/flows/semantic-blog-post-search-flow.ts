@@ -18,17 +18,19 @@ const BlogPostSchema = z.object({
   id: z.string().describe('Unique identifier for the blog post.'),
   title: z.string().describe('The title of the blog post.'),
   content: z.string().describe('The full content of the blog post.'),
-  relevanceScore: z.number().optional().describe('Cosine similarity score indicating relevance to the query.'),
 });
 
 // Define the input schema for the semantic search flow
 const SemanticBlogPostSearchInputSchema = z.object({
   query: z.string().describe('The natural language search query from the user.'),
+  blogPosts: z.array(BlogPostSchema).describe('A list of blog posts to search through.'),
 });
 
 // Define the output schema for the semantic search flow
 const SemanticBlogPostSearchOutputSchema = z.object({
-  blogPosts: z.array(BlogPostSchema).describe('A list of blog posts semantically relevant to the query, sorted by relevance.'),
+  blogPosts: z.array(BlogPostSchema.extend({
+      relevanceScore: z.number().optional().describe('Cosine similarity score indicating relevance to the query.')
+  })).describe('A list of blog posts semantically relevant to the query, sorted by relevance.'),
 });
 
 export type SemanticBlogPostSearchInput = z.infer<typeof SemanticBlogPostSearchInputSchema>;
@@ -60,47 +62,6 @@ function cosineSimilarity(vec1: number[], vec2: number[]): number {
 
   return dotProduct / (magnitude1 * magnitude2);
 }
-
-// In a real application, blog post data and their embeddings would be fetched from a database.
-// For this example, we'll use mock data and generate embeddings on the fly.
-const mockBlogPosts = [
-  {
-    id: '1',
-    title: 'Getting Started with Next.js and Firebase',
-    content: 'Learn how to build powerful full-stack applications using Next.js for the frontend and Firebase for backend services like authentication, database, and hosting.',
-    category: 'Programming',
-  },
-  {
-    id: '2',
-    title: 'The Future of AI in Education',
-    content: 'Artificial intelligence is poised to revolutionize the education sector, offering personalized learning experiences and automating administrative tasks.',
-    category: 'Education',
-  },
-  {
-    id: '3',
-    title: 'Healthy Lifestyle Tips for Developers',
-    content: 'Maintaining a healthy work-life balance is crucial for developers. This post covers exercise routines, nutrition advice, and mental well-being strategies.',
-    category: 'Lifestyle',
-  },
-  {
-    id: '4',
-    title: 'Understanding Modern JavaScript Frameworks',
-    content: 'A deep dive into popular JavaScript frameworks like React, Vue, and Angular, exploring their strengths, weaknesses, and ideal use cases.',
-    category: 'Programming',
-  },
-  {
-    id: '5',
-    title: 'Web Performance Optimization Techniques',
-    content: 'Optimize your website for speed and responsiveness. Techniques include image compression, lazy loading, and code splitting.',
-    category: 'Tech',
-  },
-  {
-    id: '6',
-    title: 'Introduction to Machine Learning Concepts',
-    content: 'This article provides a beginner-friendly introduction to machine learning, covering supervised, unsupervised learning, and popular algorithms.',
-    category: 'Tech',
-  },
-];
 
 // Cache for blog post embeddings to avoid re-generating them on every search.
 // In a real application, these would be stored in a vector database.
@@ -137,9 +98,9 @@ const semanticBlogPostSearchFlow = ai.defineFlow(
   async (input) => {
     const queryEmbedding = await getEmbedding(input.query);
 
-    const relevantPosts: Array<z.infer<typeof BlogPostSchema>> = [];
+    const relevantPosts: Array<z.infer<typeof SemanticBlogPostSearchOutputSchema>['blogPosts'][0]> = [];
 
-    for (const post of mockBlogPosts) {
+    for (const post of input.blogPosts) {
       let postEmbedding = blogPostEmbeddingsCache[post.id];
       if (!postEmbedding) {
         // Generate embedding if not cached (simulating fetching from DB/indexing)
@@ -155,10 +116,6 @@ const semanticBlogPostSearchFlow = ai.defineFlow(
     const sortedPosts = relevantPosts
       .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0))
       .slice(0, 5);
-
-    // Remove the relevanceScore from the final output if it's not part of the external API contract
-    // or explicitly keep it if it is.
-    // For this exercise, we keep it as optional in schema, so it's fine.
 
     return { blogPosts: sortedPosts };
   }

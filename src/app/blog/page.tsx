@@ -32,6 +32,12 @@ function BlogPageContent() {
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCol);
 
   const activeCategory = searchParams.get('category');
+  
+  const publishedPosts = useMemo(() => {
+    if (!posts) return [];
+    const now = Date.now();
+    return posts.filter(p => p.status === 'published' || (p.status === 'scheduled' && p.date <= now));
+  }, [posts]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +48,17 @@ function BlogPageContent() {
     setIsSearching(true);
     setCurrentPage(1);
     try {
-      // NOTE: Semantic search still uses mock data. This should be updated in a real scenario.
-      const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ query: searchQuery });
+      const searchablePosts = publishedPosts.map(p => ({
+        id: p.id,
+        title: language === 'en' ? p.title_en : p.title_bn,
+        content: language === 'en' ? p.content_en : p.content_bn,
+      }));
+      
+      const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ 
+        query: searchQuery,
+        blogPosts: searchablePosts
+      });
+
       const foundPosts = result.blogPosts
         .map(bp => posts?.find(p => p.id === bp.id))
         .filter((p): p is Post => {
@@ -70,12 +85,6 @@ function BlogPageContent() {
       setIsSearching(false);
     }
   };
-
-  const publishedPosts = useMemo(() => {
-    if (!posts) return [];
-    const now = Date.now();
-    return posts.filter(p => p.status === 'published' || (p.status === 'scheduled' && p.date <= now));
-  }, [posts]);
 
   const filteredPosts = useMemo(() => {
     if (searchResults) return searchResults;
