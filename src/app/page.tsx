@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { PostCard } from '@/components/blog/post-card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
@@ -17,14 +18,20 @@ export default function Home() {
   
   const firestore = useFirestore();
 
-  const publishedPostsQuery = useMemoFirebase(() => 
-    firestore ? query(collection(firestore, 'posts'), where('status', '==', 'published')) : null, 
+  const publicPostsQuery = useMemoFirebase(() => 
+    firestore ? query(collection(firestore, 'posts'), where('status', 'in', ['published', 'scheduled'])) : null, 
   [firestore]);
 
-  const { data: publishedPosts, isLoading } = useCollection<Post>(publishedPostsQuery);
+  const { data: publicPosts, isLoading } = useCollection<Post>(publicPostsQuery);
 
-  const featuredPosts = publishedPosts?.slice(0, 2) || [];
-  const latestPosts = publishedPosts?.slice(0, 6) || [];
+  const visiblePosts = useMemo(() => {
+    if (!publicPosts) return [];
+    const now = Date.now();
+    return publicPosts.filter(p => p.status === 'published' || (p.status === 'scheduled' && p.date <= now));
+  }, [publicPosts]);
+
+  const featuredPosts = visiblePosts.slice(0, 2);
+  const latestPosts = visiblePosts.slice(0, 6);
 
   const heroContent = {
     en: {

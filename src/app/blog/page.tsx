@@ -25,8 +25,8 @@ function BlogPageContent() {
   const postsPerPage = 6;
   
   const firestore = useFirestore();
-  const postsCol = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
-  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsCol);
+  const postsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'posts'), where('status', 'in', ['published', 'scheduled'])) : null, [firestore]);
+  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
 
   const categoriesCol = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCol);
@@ -46,7 +46,12 @@ function BlogPageContent() {
       const result: SemanticBlogPostSearchOutput = await semanticBlogPostSearch({ query: searchQuery });
       const foundPosts = result.blogPosts
         .map(bp => posts?.find(p => p.id === bp.id))
-        .filter((p): p is Post => Boolean(p) && p.status === 'published');
+        .filter((p): p is Post => {
+            if (!p) return false;
+            const isVisible = p.status === 'published' || (p.status === 'scheduled' && p.date <= Date.now());
+            return Boolean(p) && isVisible;
+        });
+
       setSearchResults(foundPosts);
       if(foundPosts.length === 0) {
         toast({
@@ -66,7 +71,11 @@ function BlogPageContent() {
     }
   };
 
-  const publishedPosts = useMemo(() => posts?.filter(p => p.status === 'published') || [], [posts]);
+  const publishedPosts = useMemo(() => {
+    if (!posts) return [];
+    const now = Date.now();
+    return posts.filter(p => p.status === 'published' || (p.status === 'scheduled' && p.date <= now));
+  }, [posts]);
 
   const filteredPosts = useMemo(() => {
     if (searchResults) return searchResults;

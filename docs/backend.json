@@ -28,8 +28,8 @@
         "imageHint": { "type": "string" },
         "category": { "type": "string" },
         "author": { "type": "string" },
-        "date": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["published", "pending"] }
+        "date": { "type": "number", "description": "Unix timestamp in milliseconds for publication date." },
+        "status": { "type": "string", "enum": ["published", "pending", "scheduled"] }
       },
       "required": [
         "slug", "title_en", "title_bn", "excerpt_en", "excerpt_bn",
@@ -46,7 +46,7 @@
         "authorName": { "type": "string" },
         "authorEmail": { "type": "string", "format": "email" },
         "content": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "number", "description": "Unix timestamp in milliseconds." }
       },
       "required": ["postId", "postTitle", "authorName", "content", "createdAt"]
     }

@@ -1,4 +1,4 @@
-export const postStatuses = ['published', 'pending'] as const;
+export const postStatuses = ['published', 'pending', 'scheduled'] as const;
 export type PostStatus = (typeof postStatuses)[number];
 
 export interface Category {
@@ -7,7 +7,7 @@ export interface Category {
 }
 
 export interface Post {
-  id: string;
+  id:string;
   slug: string;
   title_en: string;
   title_bn: string;
@@ -19,7 +19,7 @@ export interface Post {
   imageHint: string;
   category: string;
   author: string;
-  date: string; // ISO 8601 format
+  date: number; // Unix timestamp in ms
   status: PostStatus;
 }
 
@@ -30,5 +30,5 @@ export interface Comment {
   authorName: string;
   authorEmail: string;
   content: string;
-  createdAt: string; // ISO 8601 format
+  createdAt: number; // Unix timestamp in ms
 }

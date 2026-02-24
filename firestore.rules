@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     match /posts/{postId} {
-      allow get: if resource.data.status == 'published' || isSignedIn();
+      allow get: if resource.data.status == 'published' || (resource.data.status == 'scheduled' && resource.data.date < request.time.toMillis()) || isSignedIn();
       allow list: if true;
       allow write: if isSignedIn();
 

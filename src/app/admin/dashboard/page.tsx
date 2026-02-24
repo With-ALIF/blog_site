@@ -30,7 +30,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle, Tags, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, FileText, Clock, CheckCircle, Tags, Loader2, CalendarClock } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,8 +82,8 @@ export default function AdminDashboardPage() {
 
   const totalPosts = posts?.length || 0;
   const pendingPostsCount = posts?.filter(post => post.status === 'pending').length || 0;
-  const publishedPostsCount = totalPosts - pendingPostsCount;
-  const totalCategories = categories?.length || 0;
+  const scheduledPostsCount = posts?.filter(post => post.status === 'scheduled').length || 0;
+  const publishedPostsCount = posts?.filter(post => post.status === 'published').length || 0;
 
   return (
     <>
@@ -119,20 +119,20 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scheduled Posts</CardTitle>
+            <CalendarClock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoadingPosts ? <Loader2 className="h-6 w-6 animate-spin" /> : scheduledPostsCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Posts</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoadingPosts ? <Loader2 className="h-6 w-6 animate-spin" /> : pendingPostsCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
-            <Tags className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoadingCategories ? <Loader2 className="h-6 w-6 animate-spin" /> : totalCategories}</div>
           </CardContent>
         </Card>
       </div>
@@ -163,7 +163,7 @@ export default function AdminDashboardPage() {
                 <TableCell className="font-medium max-w-xs truncate">{language === 'en' ? post.title_en : post.title_bn}</TableCell>
                 <TableCell className="hidden md:table-cell">{post.category}</TableCell>
                  <TableCell className="hidden md:table-cell">
-                  <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className="capitalize">
+                  <Badge variant={post.status === 'published' ? 'default' : post.status === 'scheduled' ? 'outline' : 'secondary'} className="capitalize">
                     {post.status}
                   </Badge>
                 </TableCell>

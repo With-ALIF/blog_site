@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Post, postStatuses, Category } from '@/lib/types';
+import { Post, postStatuses, Category, PostStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,11 @@ import { collection, doc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Eye } from 'lucide-react';
+import { Eye, CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const formSchema = z.object({
   title_en: z.string().min(2, { message: 'English title must be at least 2 characters.' }),
@@ -31,6 +35,7 @@ const formSchema = z.object({
   category: z.string().min(1, { message: 'A category is required.' }),
   author: z.string().min(2, { message: 'Author name must be at least 2 characters.' }),
   status: z.enum(postStatuses),
+  date: z.date({ required_error: 'A publication date is required.' }),
   imageUrl: z.string().optional().or(z.literal('')),
   imageHint: z.string().max(40, {message: 'Image hint should be one or two words.'}).optional(),
 });
@@ -64,6 +69,7 @@ export function PostForm({ post }: PostFormProps) {
       category: post?.category || categories?.[0]?.name || '',
       author: post?.author || 'Admin',
       status: post?.status || 'pending',
+      date: post ? new Date(post.date) : new Date(),
       imageUrl: post?.imageUrl || '',
       imageHint: post?.imageHint || '',
     },
@@ -75,23 +81,34 @@ export function PostForm({ post }: PostFormProps) {
     if (!firestore) return;
     const slug = values.title_en.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     
+    let finalStatus: PostStatus = values.status;
+    if (values.status === 'published' && values.date.getTime() > Date.now()) {
+      finalStatus = 'scheduled';
+      toast({
+        title: 'Post Scheduled',
+        description: 'This post is scheduled for future publication.',
+      });
+    }
+
     const postData = {
         ...values,
         slug,
+        date: values.date.getTime(),
+        status: finalStatus,
         imageUrl: values.imageUrl || `https://picsum.photos/seed/${Math.random()}/1200/800`,
         imageHint: values.imageHint || 'abstract placeholder',
     };
 
     if (isEditing && post) {
         const postRef = doc(firestore, 'posts', post.id);
-        setDocumentNonBlocking(postRef, { ...postData, date: post.date }, { merge: true });
+        setDocumentNonBlocking(postRef, postData , { merge: true });
         toast({
             title: 'Post Updated!',
             description: 'Your blog post has been successfully updated.',
         });
     } else {
         const postsCol = collection(firestore, 'posts');
-        addDocumentNonBlocking(postsCol, { ...postData, date: new Date().toISOString() });
+        addDocumentNonBlocking(postsCol, postData);
         toast({
             title: 'Post Created!',
             description: 'Your new blog post has been successfully created.',
@@ -192,7 +209,7 @@ export function PostForm({ post }: PostFormProps) {
             </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FormField
               control={form.control}
               name="category"
@@ -242,6 +259,66 @@ export function PostForm({ post }: PostFormProps) {
                       {postStatuses.map(status => <SelectItem key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Publication Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP HH:mm")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date) => {
+                            if (!date) return;
+                            const newDate = new Date(field.value);
+                            date.setHours(newDate.getHours());
+                            date.setMinutes(newDate.getMinutes());
+                            field.onChange(date);
+                        }}
+                        initialFocus
+                      />
+                      <div className="p-3 border-t border-border">
+                        <Input 
+                            type="time"
+                            defaultValue={format(field.value, "HH:mm")}
+                            onChange={(e) => {
+                                const [hours, minutes] = e.target.value.split(':').map(Number);
+                                const newDate = new Date(field.value);
+                                newDate.setHours(hours);
+                                newDate.setMinutes(minutes);
+                                field.onChange(newDate);
+                            }}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <FormDescription>
+                    Set a future date to schedule the post.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

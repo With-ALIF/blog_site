@@ -73,7 +73,7 @@ function CommentForm({ postId, postTitle, language }: { postId: string; postTitl
             ...values,
             postId,
             postTitle,
-            createdAt: new Date().toISOString(),
+            createdAt: Date.now(),
         });
         
         toast({
@@ -223,7 +223,9 @@ export default function PostPage() {
   }, [firestore, slug]);
   
   const { data: posts, isLoading, error } = useCollection<Post>(postQuery);
-  const post = posts?.find(p => p.status === 'published' || (p.status !== 'published' && !!user));
+  const post = posts?.[0];
+
+  const canView = post && (post.status === 'published' || (post.status === 'scheduled' && post.date <= Date.now()) || !!user);
 
 
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -262,11 +264,11 @@ export default function PostPage() {
         </div>
     );
   }
-
-  if (!post && !isLoading) {
+  
+  if (!isLoading && !canView) {
     notFound();
   }
-  
+
   if (!post) {
       return (
           <div className="container flex items-center justify-center py-24">
