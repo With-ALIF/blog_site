@@ -16,6 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Eye } from 'lucide-react';
 
 const formSchema = z.object({
   title_en: z.string().min(2, { message: 'English title must be at least 2 characters.' }),
@@ -64,6 +68,8 @@ export function PostForm({ post }: PostFormProps) {
       imageHint: post?.imageHint || '',
     },
   });
+
+  const watchedValues = form.watch();
 
   function onSubmit(values: PostFormValues) {
     if (!firestore) return;
@@ -332,6 +338,45 @@ export function PostForm({ post }: PostFormProps) {
 
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-4">
             <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">Cancel</Button>
+            
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full sm:w-auto">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Post Preview</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-grow overflow-y-auto pr-6 -mr-6">
+                        <Tabs defaultValue="en_preview" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="en_preview">English</TabsTrigger>
+                                <TabsTrigger value="bn_preview">Bangla</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="en_preview">
+                                <article className="prose dark:prose-invert max-w-none mx-auto py-6">
+                                    <h1>{watchedValues.title_en}</h1>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {watchedValues.content_en}
+                                    </ReactMarkdown>
+                                </article>
+                            </TabsContent>
+                            <TabsContent value="bn_preview">
+                                 <article className="prose dark:prose-invert max-w-none mx-auto py-6">
+                                    <h1>{watchedValues.title_bn}</h1>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {watchedValues.content_bn}
+                                    </ReactMarkdown>
+                                </article>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             <Button type="submit" className="w-full sm:w-auto">{isEditing ? 'Update Post' : 'Create Post'}</Button>
         </div>
       </form>
