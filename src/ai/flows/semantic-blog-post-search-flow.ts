@@ -82,8 +82,8 @@ const getEmbedding = async (text: string): Promise<number[]> => {
       model: 'text-embedding-004',
       content: text,
     });
-    // Ensure that embedResponse.embedding exists before returning
-    if (!embedResponse.embedding) {
+    // Ensure that embedResponse and embedResponse.embedding exist before returning
+    if (!embedResponse || !embedResponse.embedding) {
       console.warn('Failed to generate embedding for text, returning empty vector.');
       return [];
     }
@@ -134,7 +134,7 @@ const semanticBlogPostSearchFlow = ai.defineFlow(
 
 /**
  * Performs a semantic search for blog posts based on a natural language query.
- * @param input An object containing the search query.
+ * @param input An object containing the search query and the posts to search through.
  * @returns A promise that resolves to an object containing a list of relevant blog posts.
  */
 export async function semanticBlogPostSearch(input: SemanticBlogPostSearchInput): Promise<SemanticBlogPostSearchOutput> {
