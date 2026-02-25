@@ -350,9 +350,12 @@ export default function PostPage() {
         <header className="mb-8">
           <Badge variant="secondary" className="mb-4">{post.category}</Badge>
           <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-            <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
-            <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
+          <div className="flex flex-wrap items-center justify-between gap-4 text-muted-foreground text-sm">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
+              <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
+            </div>
+            <SocialShare title={title} url={currentUrl} />
           </div>
         </header>
 
@@ -366,8 +369,7 @@ export default function PostPage() {
           </ReactMarkdown>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-8">
-          <SocialShare title={title} url={currentUrl} />
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 border-t pt-8">
           <Button onClick={handleTranslate} disabled={isTranslating}>
             {isTranslating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Languages className="mr-2 h-4 w-4" />}
             {isTranslating ? (language === 'en' ? 'Translating...' : 'অনুবাদ হচ্ছে...') : (language === 'en' ? 'Translate to Bangla' : 'Translate to English')}
