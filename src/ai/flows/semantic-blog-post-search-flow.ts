@@ -13,6 +13,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+// Define a relevance threshold to filter out low-quality matches.
+const RELEVANCE_THRESHOLD = 0.5;
+
 // Define the schema for a single blog post
 const BlogPostSchema = z.object({
   id: z.string().describe('Unique identifier for the blog post.'),
@@ -74,7 +77,6 @@ const blogPostEmbeddingsCache: Record<string, number[]> = {};
  */
 const getEmbedding = async (text: string): Promise<number[]> => {
   if (!text || !text.trim()) {
-    // Return an empty array for empty input to avoid errors.
     return [];
   }
   try {
@@ -82,7 +84,6 @@ const getEmbedding = async (text: string): Promise<number[]> => {
       model: 'text-embedding-004',
       content: text,
     });
-    // Ensure that embedResponse and embedResponse.embedding exist before returning
     if (!embedResponse || !embedResponse.embedding) {
       console.warn('Failed to generate embedding for text, returning empty vector.');
       return [];
@@ -90,7 +91,6 @@ const getEmbedding = async (text: string): Promise<number[]> => {
     return embedResponse.embedding;
   } catch (error) {
       console.error("Error in getEmbedding:", error);
-      // Return empty vector on error to prevent crash
       return [];
   }
 };
@@ -109,24 +109,37 @@ const semanticBlogPostSearchFlow = ai.defineFlow(
   async (input) => {
     const queryEmbedding = await getEmbedding(input.query);
 
+    if (queryEmbedding.length === 0) {
+      // If the query is invalid or fails to produce an embedding, return no results.
+      return { blogPosts: [] };
+    }
+
     const relevantPosts: Array<z.infer<typeof SemanticBlogPostSearchOutputSchema>['blogPosts'][0]> = [];
 
     for (const post of input.blogPosts) {
       let postEmbedding = blogPostEmbeddingsCache[post.id];
       if (!postEmbedding) {
-        // Generate embedding if not cached (simulating fetching from DB/indexing)
         postEmbedding = await getEmbedding(`${post.title}. ${post.content}`);
-        blogPostEmbeddingsCache[post.id] = postEmbedding;
+        if (postEmbedding.length > 0) {
+          blogPostEmbeddingsCache[post.id] = postEmbedding;
+        }
+      }
+      
+      if (postEmbedding.length === 0) {
+        continue; // Skip posts that failed to get an embedding.
       }
 
       const relevanceScore = cosineSimilarity(queryEmbedding, postEmbedding);
-      relevantPosts.push({ ...post, relevanceScore });
+      
+      // Only include posts that meet the relevance threshold.
+      if (relevanceScore >= RELEVANCE_THRESHOLD) {
+        relevantPosts.push({ ...post, relevanceScore });
+      }
     }
 
-    // Sort by relevance score in descending order and take the top N (e.g., top 5)
+    // Sort the truly relevant posts by score in descending order.
     const sortedPosts = relevantPosts
-      .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0))
-      .slice(0, 5);
+      .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
 
     return { blogPosts: sortedPosts };
   }
