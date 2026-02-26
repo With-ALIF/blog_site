@@ -268,9 +268,9 @@ export default function PostPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-        setCurrentUrl(window.location.href);
+        setCurrentUrl(`${window.location.origin}/blog/${slug}`);
     }
-  }, []);
+  }, [slug]);
   
   useEffect(() => {
     // Reset translation when language is switched manually
@@ -348,15 +348,15 @@ export default function PostPage() {
     <div className="container max-w-4xl py-12 md:py-20">
       <article>
         <header className="mb-8">
-          <Badge variant="secondary" className="mb-4">{post.category}</Badge>
-          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
-          <div className="flex flex-wrap items-center justify-between gap-4 text-muted-foreground text-sm">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
-              <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
+            <div className="flex flex-wrap items-center justify-between gap-4 text-muted-foreground text-sm mb-4">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
+                    <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
+                </div>
+                <SocialShare title={title} url={currentUrl} />
             </div>
-            <SocialShare title={title} url={currentUrl} />
-          </div>
+            <Badge variant="secondary" className="mb-4">{post.category}</Badge>
+            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
         </header>
 
         <div className="relative aspect-[16/9] rounded-lg overflow-hidden mb-8 shadow-lg">
