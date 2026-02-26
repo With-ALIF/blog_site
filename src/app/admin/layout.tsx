@@ -12,7 +12,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Tags, PlusCircle, Home, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Tags, PlusCircle, Home, LogOut, Loader2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AlifLogo } from '@/components/common/logo';
@@ -87,6 +87,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link href="/admin/categories">
                     <Tags />
                     Categories
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/admin/subscribers')}>
+                  <Link href="/admin/subscribers">
+                    <Users />
+                    Subscribers
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
