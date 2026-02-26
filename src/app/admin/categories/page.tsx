@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,16 +22,26 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Trash2, PlusCircle, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import type { Category, Post } from '@/lib/types';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function CategoriesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [newCategory, setNewCategory] = useState('');
@@ -43,18 +53,20 @@ export default function CategoriesPage() {
   const postsCol = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
   const { data: posts } = useCollection<Post>(postsCol);
 
-  const categoryPostCounts = useMemoFirebase(() => {
-    if (!categories || !posts) return {};
-    return categories.reduce((acc, category) => {
-        acc[category.name] = posts.filter(p => p.category === category.name).length;
-        return acc;
-    }, {} as Record<string, number>);
-  }, [categories, posts]);
+  const postsByCategory = useMemo(() => {
+    if (!posts || !categories) return {};
+    const map: Record<string, Post[]> = {};
+    for (const category of categories) {
+        map[category.name] = posts.filter(p => p.category === category.name);
+    }
+    return map;
+  }, [posts, categories]);
+
 
   const handleDelete = () => {
     if (!categoryToDelete || !firestore) return;
     
-    if ((categoryPostCounts as Record<string, number>)[categoryToDelete.name] > 0) {
+    if ((postsByCategory[categoryToDelete.name] || []).length > 0) {
       toast({
         variant: 'destructive',
         title: 'Category in Use',
@@ -149,14 +161,37 @@ export default function CategoriesPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {categories?.map((category) => (
+                        {categories?.map((category) => {
+                            const postsInCategory = postsByCategory[category.name] || [];
+                            const postCount = postsInCategory.length;
+                            return (
                             <TableRow key={category.id}>
                             <TableCell className="font-medium">{category.name}</TableCell>
                             <TableCell className="text-center">
-                                <div className="flex items-center justify-center gap-2">
-                                    <FileText className="h-4 w-4 text-muted-foreground"/>
-                                    {(categoryPostCounts as Record<string, number>)[category.name] || 0}
-                                </div>
+                                {postCount > 0 ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="flex items-center justify-center gap-2 font-normal">
+                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                                {postCount}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuLabel>Posts in {category.name}</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {postsInCategory.map((post) => (
+                                            <DropdownMenuItem key={post.id} onSelect={() => router.push(`/admin/posts/edit/${post.slug}`)}>
+                                                {language === 'en' ? post.title_en : post.title_bn}
+                                            </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                        <FileText className="h-4 w-4" />
+                                        0
+                                    </div>
+                                )}
                             </TableCell>
                             <TableCell className="text-right">
                                 <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(category)}>
@@ -165,7 +200,7 @@ export default function CategoriesPage() {
                                 </Button>
                             </TableCell>
                             </TableRow>
-                        ))}
+                        )})}
                         </TableBody>
                     </Table>
                     )}
