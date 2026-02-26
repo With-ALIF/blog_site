@@ -32,3 +32,9 @@ export interface Comment {
   content: string;
   createdAt: number; // Unix timestamp in ms
 }
+
+export interface Subscriber {
+  id: string;
+  email: string;
+  subscribedAt: number; // Unix timestamp in ms
+}

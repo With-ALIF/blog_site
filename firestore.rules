@@ -28,5 +28,10 @@ service cloud.firestore {
       // Allow only signed-in users (admins) to delete comments.
       allow delete: if isSignedIn();
     }
+
+    match /subscribers/{subscriberId} {
+      allow create: if true;
+      allow read, write, delete: if isSignedIn();
+    }
   }
 }

@@ -29,7 +29,7 @@
         "category": { "type": "string" },
         "author": { "type": "string" },
         "date": { "type": "number", "description": "Unix timestamp in milliseconds for publication date." },
-        "status": { "type": "string", "enum": ["published", "pending", "scheduled"] }
+        "status": { "type": "string", "enum": ["published", "scheduled"] }
       },
       "required": [
         "slug", "title_en", "title_bn", "excerpt_en", "excerpt_bn",
@@ -49,6 +49,22 @@
         "createdAt": { "type": "number", "description": "Unix timestamp in milliseconds." }
       },
       "required": ["postId", "postTitle", "authorName", "content", "createdAt"]
+    },
+    "Subscriber": {
+      "title": "Subscriber",
+      "type": "object",
+      "description": "Represents a newsletter subscriber.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "subscribedAt": {
+          "type": "number",
+          "description": "Unix timestamp in milliseconds."
+        }
+      },
+      "required": ["email", "subscribedAt"]
     }
   },
   "auth": {
@@ -104,6 +120,22 @@
             {
               "name": "commentId",
               "description": "The unique ID for the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/subscribers/{subscriberId}",
+        "definition": {
+          "entityName": "Subscriber",
+          "schema": {
+            "$ref": "#/backend/entities/Subscriber"
+          },
+          "description": "Stores newsletter subscribers. Anyone can create (subscribe), but only admins can read/delete.",
+          "params": [
+            {
+              "name": "subscriberId",
+              "description": "The unique ID for the subscriber."
             }
           ]
         }

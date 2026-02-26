@@ -11,6 +11,7 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { Post } from '@/lib/types';
+import { SubscriptionForm } from '@/components/home/subscription-form';
 
 
 export default function Home() {
@@ -112,6 +113,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Subscription Section */}
+      <SubscriptionForm />
     </>
   );
 }
