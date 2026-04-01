@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /posts/{postId} {
+      allow get: if resource.data.status == 'published' || (resource.data.status == 'scheduled' && resource.data.date < request.time.toMillis()) || isSignedIn();
+      allow list: if true;
+      allow write: if isSignedIn();
+
+      // Comment rules are now handled by the collection group match below to avoid conflicts.
+    }
+
+    // This single rule governs all access to comments.
+    match /{path=**}/comments/{commentId} {
+      // Allow public reads for blog post pages (list, get) and admin reads for the collection group query.
+      allow read: if true;
+      // Allow anyone to create a comment.
+      allow create: if true;
+      // Allow only signed-in users (admins) to delete comments.
+      allow delete: if isSignedIn();
+    }
+
+    match /subscribers/{subscriberId} {
+      allow create: if true;
+      allow read, write, delete: if isSignedIn();
+    }
+  }
+}

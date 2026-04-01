@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a blog post category.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        }
+      },
+      "required": ["name"]
+    },
+    "BlogPost": {
+      "title": "BlogPost",
+      "type": "object",
+      "description": "Represents a single blog post.",
+      "properties": {
+        "slug": { "type": "string" },
+        "title_en": { "type": "string" },
+        "title_bn": { "type": "string" },
+        "excerpt_en": { "type": "string" },
+        "excerpt_bn": { "type": "string" },
+        "content_en": { "type": "string" },
+        "content_bn": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageHint": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "number", "description": "Unix timestamp in milliseconds for publication date." },
+        "status": { "type": "string", "enum": ["published", "scheduled"] }
+      },
+      "required": [
+        "slug", "title_en", "title_bn", "excerpt_en", "excerpt_bn",
+        "content_en", "content_bn", "category", "author", "date", "status"
+      ]
+    },
+    "Comment": {
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a blog post.",
+      "properties": {
+        "postId": { "type": "string" },
+        "postTitle": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorEmail": { "type": "string", "format": "email" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "number", "description": "Unix timestamp in milliseconds." }
+      },
+      "required": ["postId", "postTitle", "authorName", "content", "createdAt"]
+    },
+    "Subscriber": {
+      "title": "Subscriber",
+      "type": "object",
+      "description": "Represents a newsletter subscriber.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "subscribedAt": {
+          "type": "number",
+          "description": "Unix timestamp in milliseconds."
+        }
+      },
+      "required": ["email", "subscribedAt"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores blog categories. Publicly readable. Writable only by authenticated users.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique ID for the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+          "entityName": "BlogPost",
+          "schema": {
+            "$ref": "#/backend/entities/BlogPost"
+          },
+          "description": "Stores blog posts. Posts with 'published' status are publicly readable. All posts are writable only by authenticated users.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique ID for the blog post."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/posts/{postId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments for a specific blog post. Publicly readable, writable by anyone, deletable by admins.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The ID of the post being commented on."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique ID for the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/subscribers/{subscriberId}",
+        "definition": {
+          "entityName": "Subscriber",
+          "schema": {
+            "$ref": "#/backend/entities/Subscriber"
+          },
+          "description": "Stores newsletter subscribers. Anyone can create (subscribe), but only admins can read/delete.",
+          "params": [
+            {
+              "name": "subscriberId",
+              "description": "The unique ID for the subscriber."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
