@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Post } from '@/lib/types';
 import { SubscriptionForm } from '@/components/home/subscription-form';
 
@@ -37,12 +37,12 @@ export default function Home() {
   const heroContent = {
     en: {
       headline: 'Explore Worlds, One Word at a Time.',
-      subheadline: 'Your bilingual portal to insightful articles on technology, education, and lifestyle. Switch between English and Bangla seamlessly.',
+      subheadline: 'Your bilingual portal to insightful articles on technology, education, and lifestyle.',
       cta: 'Explore Blog',
     },
     bn: {
       headline: 'পৃথিবী ঘুরে দেখুন, একবারে একটি শব্দ।',
-      subheadline: 'প্রযুক্তি, শিক্ষা এবং জীবনধারা সম্পর্কিত অন্তর্দৃষ্টিপূর্ণ নিবন্ধগুলির জন্য আপনার দ্বিভাষিক পোর্টাল। ইংরেজি এবং বাংলার মধ্যে নির্বিঘ্নে পরিবর্তন করুন।',
+      subheadline: 'প্রযুক্তি, শিক্ষা এবং জীবনধারা সম্পর্কিত অন্তর্দৃষ্টিপূর্ণ নিবন্ধগুলির জন্য আপনার দ্বিভাষিক পোর্টাল।',
       cta: 'ব্লগ দেখুন',
     },
   };
@@ -50,7 +50,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[60vh] md:h-[70vh] w-full flex items-center justify-center text-center text-white">
+      <section className="relative min-h-[70vh] md:h-[80vh] w-full flex items-center justify-center text-center text-white overflow-hidden py-12">
         <Image 
           src={heroImage.imageUrl} 
           alt="Abstract background with language characters" 
@@ -59,30 +59,35 @@ export default function Home() {
           priority
           data-ai-hint={heroImage.imageHint}
         />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 max-w-3xl px-4">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-headline mb-4 leading-tight shadow-lg">
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="relative z-10 max-w-4xl px-4 sm:px-6">
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold font-headline mb-4 md:mb-6 leading-tight drop-shadow-2xl">
             {heroContent[language].headline}
           </h1>
-          <p className="text-lg md:text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-xl text-slate-200 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
             {heroContent[language].subheadline}
           </p>
-          <Button asChild size="lg" className="font-bold">
-            <Link href="/blog">{heroContent[language].cta} <ArrowRight className="ml-2" /></Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button asChild size="lg" className="font-bold h-12 px-8 w-full sm:w-auto">
+              <Link href="/blog">{heroContent[language].cta} <ArrowRight className="ml-2 h-5 w-5" /></Link>
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Featured Posts */}
-      <section className="py-16 md:py-24">
-        <div className="container">
-          <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center mb-12">
-            {language === 'en' ? 'Featured Posts' : 'বৈশিষ্ট্যযুক্ত পোস্ট'}
-          </h2>
+      <section className="py-12 md:py-24">
+        <div className="container px-4">
+          <div className="flex items-center justify-between mb-8 md:mb-10">
+            <h2 className="text-xl sm:text-4xl font-bold font-headline">
+              {language === 'en' ? 'Featured Posts' : 'বৈশিষ্ট্যযুক্ত পোস্ট'}
+            </h2>
+            <div className="h-1 flex-1 mx-4 bg-primary/10 hidden sm:block rounded-full"></div>
+          </div>
           {isLoading ? (
-            <div className="flex justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
               {featuredPosts.map(post => (
                 <PostCard key={post.id} post={post} />
               ))}
@@ -92,22 +97,27 @@ export default function Home() {
       </section>
 
       {/* Latest Posts */}
-      <section className="py-16 md:py-24 bg-card/50">
-        <div className="container">
-          <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center mb-12">
-            {language === 'en' ? 'Latest Posts' : 'সর্বশেষ পোস্ট'}
-          </h2>
+      <section className="py-12 md:py-24 bg-muted/30">
+        <div className="container px-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+            <h2 className="text-xl sm:text-4xl font-bold font-headline">
+              {language === 'en' ? 'Latest Updates' : 'সর্বশেষ আপডেট'}
+            </h2>
+             <Button asChild variant="ghost" className="hidden md:flex gap-2">
+              <Link href="/blog">{language === 'en' ? 'Browse All' : 'সব দেখুন'} <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
+          </div>
            {isLoading ? (
-            <div className="flex justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {latestPosts.map(post => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}
-          <div className="text-center mt-12">
-            <Button asChild variant="outline">
+          <div className="text-center mt-10 md:hidden">
+            <Button asChild variant="outline" className="w-full">
               <Link href="/blog">{language === 'en' ? 'View All Posts' : 'সমস্ত পোস্ট দেখুন'}</Link>
             </Button>
           </div>

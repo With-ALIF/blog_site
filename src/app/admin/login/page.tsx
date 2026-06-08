@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,7 +14,8 @@ import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@alif.com');
+  // Default credentials for the user
+  const [email, setEmail] = useState('alif@mnr.bd');
   const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -33,22 +35,16 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      // First, try to sign in
       await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged will handle redirect on success.
     } catch (signInError: any) {
-      // If user does not exist or password is wrong, try creating the user.
-      // Firebase returns 'auth/invalid-credential' for both cases now.
-      if (signInError.code === 'auth/invalid-credential') {
+      if (signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/user-not-found') {
         try {
           await createUserWithEmailAndPassword(auth, email, password);
-          // onAuthStateChanged will handle redirect on success.
           toast({
             title: 'Admin Account Created',
             description: 'Your admin account has been successfully created and logged in.',
           });
         } catch (signUpError: any) {
-          // This error is likely for a weak password or if the email is already in use by another method.
           toast({
             variant: 'destructive',
             title: 'Sign Up Failed',
@@ -57,7 +53,6 @@ export default function AdminLoginPage() {
           setIsLoading(false);
         }
       } else {
-        // For other sign-in errors (network, etc.), display them
         toast({
           variant: 'destructive',
           title: 'Login Failed',
@@ -90,7 +85,7 @@ export default function AdminLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@alif.com"
+                placeholder="alif@mnr.bd"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

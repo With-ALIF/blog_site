@@ -52,15 +52,15 @@ function BlogPageContent() {
   const isLoading = isLoadingPosts || isLoadingCategories;
 
   return (
-    <div className="container py-16 md:py-24">
-      <h1 className="text-4xl sm:text-5xl font-bold font-headline text-center mb-12">{pageTitle}</h1>
+    <div className="container px-4 py-12 md:py-24">
+      <h1 className="text-3xl sm:text-5xl font-bold font-headline text-center mb-8 md:mb-12">{pageTitle}</h1>
 
-      <div className="flex justify-center flex-wrap gap-2 mb-12">
-        <Button asChild variant={!activeCategory ? 'default' : 'outline'}>
+      <div className="flex justify-center flex-wrap gap-2 mb-8 md:mb-12">
+        <Button asChild variant={!activeCategory ? 'default' : 'outline'} className="rounded-full px-6">
           <Link href="/blog">{allCategories}</Link>
         </Button>
         {categories?.map(category => (
-          <Button asChild key={category.id} variant={activeCategory === category.name ? 'default' : 'outline'}>
+          <Button asChild key={category.id} variant={activeCategory === category.name ? 'default' : 'outline'} className="rounded-full px-6">
             <Link href={`/blog?category=${category.name}`}>{category.name}</Link>
           </Button>
         ))}
@@ -68,28 +68,29 @@ function BlogPageContent() {
       
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="h-12 w-12 animate-spin" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       ) : paginatedPosts.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {paginatedPosts.map(post => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-          <h3 className="text-2xl font-bold font-headline mb-2">{language === 'en' ? 'No Posts Found' : 'কোনো পোস্ট পাওয়া যায়নি'}</h3>
+        <div className="text-center py-16 border-2 border-dashed rounded-lg bg-muted/20">
+          <h3 className="text-xl md:text-2xl font-bold font-headline mb-2">{language === 'en' ? 'No Posts Found' : 'কোনো পোস্ট পাওয়া যায়নি'}</h3>
           <p className="text-muted-foreground">{language === 'en' ? 'Try a different category.' : 'ভিন্ন বিভাগ চেষ্টা করুন।'}</p>
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center mt-12 space-x-2">
+        <div className="flex justify-center mt-12 gap-2 flex-wrap">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
             <Button 
               key={page} 
               variant={currentPage === page ? 'default' : 'outline'}
               onClick={() => setCurrentPage(page)}
+              className="w-10 h-10 p-0 rounded-full"
             >
               {page}
             </Button>
@@ -102,7 +103,7 @@ function BlogPageContent() {
 
 export default function BlogPage() {
   return (
-    <Suspense fallback={<div className="container text-center py-24"><Loader2 className="h-12 w-12 animate-spin mx-auto" /></div>}>
+    <Suspense fallback={<div className="container text-center py-24"><Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" /></div>}>
       <BlogPageContent />
     </Suspense>
   );

@@ -1,19 +1,28 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Clock, User, Facebook, Linkedin, Languages, Loader2, AlertTriangle, MessageSquare } from 'lucide-react';
+import { 
+  Clock, 
+  User, 
+  Facebook, 
+  Linkedin, 
+  Loader2, 
+  AlertTriangle, 
+  MessageSquare, 
+  Link as LucideLink,
+  Check
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { onDemandPostTranslation } from '@/ai/flows/on-demand-post-translation';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
-import { collection, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Post, Comment } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ReactMarkdown from 'react-markdown';
@@ -23,25 +32,54 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trash2 } from 'lucide-react';
+import { sendTelegramNotification } from '@/ai/flows/send-telegram-notification';
 
 
 function SocialShare({ title, url }: { title: string, url: string }) {
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
   const encodedTitle = encodeURIComponent(title);
   const encodedUrl = encodeURIComponent(url);
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast({
+        title: "Link Copied!",
+        description: "The article link has been copied to your clipboard.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to copy",
+        description: "Please copy the URL from your browser's address bar.",
+      });
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground">Share:</span>
-      <Button asChild variant="outline" size="icon" aria-label="Share on Facebook">
+      <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Share:</span>
+      <Button asChild variant="outline" size="icon" className="h-8 w-8" aria-label="Share on Facebook">
         <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer">
           <Facebook className="h-4 w-4" />
         </a>
       </Button>
-      <Button asChild variant="outline" size="icon" aria-label="Share on LinkedIn">
+      <Button asChild variant="outline" size="icon" className="h-8 w-8" aria-label="Share on LinkedIn">
         <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`} target="_blank" rel="noopener noreferrer">
           <Linkedin className="h-4 w-4" />
         </a>
+      </Button>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        className="h-8 w-8" 
+        aria-label="Copy Link"
+        onClick={handleCopy}
+      >
+        {copied ? <Check className="h-4 w-4 text-green-500" /> : <LucideLink className="h-4 w-4" />}
       </Button>
     </div>
   );
@@ -70,11 +108,20 @@ function CommentForm({ postId, postTitle, language }: { postId: string; postTitl
         if (!firestore) return;
         const commentsCol = collection(firestore, 'posts', postId, 'comments');
         
-        await addDocumentNonBlocking(commentsCol, {
+        addDocumentNonBlocking(commentsCol, {
             ...values,
             postId,
             postTitle,
             createdAt: Date.now(),
+        });
+
+        // Send Telegram notification (Awaited for Serverless reliability)
+        await sendTelegramNotification({
+            type: 'comment',
+            authorName: values.authorName,
+            email: values.authorEmail,
+            postTitle: postTitle,
+            commentContent: values.content,
         });
         
         toast({
@@ -146,7 +193,7 @@ function CommentForm({ postId, postTitle, language }: { postId: string; postTitl
                             </FormItem>
                         )}
                     />
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isSubmitting ? content[language].submitting : content[language].submit}
                     </Button>
@@ -158,8 +205,6 @@ function CommentForm({ postId, postTitle, language }: { postId: string; postTitl
 
 function CommentList({ postId, language }: { postId: string; language: 'en' | 'bn'}) {
     const firestore = useFirestore();
-    const { user } = useUser(); // To check if the current user is an admin
-    const { toast } = useToast();
 
     const commentsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -168,24 +213,6 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
     
     const { data: comments, isLoading, error } = useCollection<Comment>(commentsQuery);
     
-    const handleDeleteComment = async (commentId: string) => {
-        if (!firestore) return;
-        try {
-            await deleteDoc(doc(firestore, 'posts', postId, 'comments', commentId));
-            toast({
-                title: language === 'en' ? 'Comment Deleted' : 'মন্তব্য মুছে ফেলা হয়েছে',
-                description: language === 'en' ? 'The comment has been removed.' : 'মন্তব্যটি সরানো হয়েছে।',
-            });
-        } catch (e) {
-             toast({
-                variant: 'destructive',
-                title: language === 'en' ? 'Error' : 'ত্রুটি',
-                description: language === 'en' ? 'Could not delete the comment.' : 'মন্তব্যটি মোছা যায়নি।',
-            });
-        }
-    }
-
-
     const content = {
         en: {
             title: 'Comments',
@@ -204,36 +231,26 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
     return (
         <div className="mt-12">
             <h2 className="font-headline text-2xl font-bold mb-6 flex items-center gap-2">
-                <MessageSquare className="h-6 w-6" /> {content[language].title} ({comments?.length || 0})
+                <MessageSquare className="h-6 w-6 text-primary" /> {content[language].title} ({comments?.length || 0})
             </h2>
             <div className="space-y-6">
-                {isLoading && <p className="text-muted-foreground">{content[language].loading}</p>}
+                {isLoading && <p className="text-muted-foreground animate-pulse">{content[language].loading}</p>}
                 {error && <p className="text-destructive">{content[language].error}</p>}
-                {!isLoading && !error && comments?.length === 0 && <p className="text-muted-foreground">{content[language].noComments}</p>}
+                {!isLoading && !error && comments?.length === 0 && <p className="text-muted-foreground italic">{content[language].noComments}</p>}
                 {comments?.map(comment => (
                     <div key={comment.id} className="flex gap-4 group">
-                        <Avatar>
+                        <Avatar className="h-10 w-10 border shadow-sm">
                             <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.authorName}`} alt={comment.authorName} />
-                            <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
+                            <AvatarFallback className="bg-primary/5">{comment.authorName.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                           <div className="flex justify-between items-center">
-                                <p className="font-semibold">{comment.authorName}</p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), 'MMM d, yyyy')}</p>
-                                    {user && (
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => handleDeleteComment(comment.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                    )}
+                        <div className="flex-1 bg-muted/20 p-4 rounded-2xl">
+                           <div className="flex justify-between items-start mb-1">
+                                <div>
+                                    <p className="font-semibold text-sm">{comment.authorName}</p>
+                                    <p className="text-[10px] text-muted-foreground">{format(new Date(comment.createdAt), 'MMM d, yyyy HH:mm')}</p>
                                 </div>
                            </div>
-                           <p className="text-sm text-foreground/90 mt-1">{comment.content}</p>
+                           <p className="text-sm text-foreground/90 leading-relaxed">{comment.content}</p>
                         </div>
                     </div>
                 ))}
@@ -246,8 +263,7 @@ function CommentList({ postId, language }: { postId: string; language: 'en' | 'b
 export default function PostPage() {
   const params = useParams();
   const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) as string;
-  const { language, setLanguage } = useLanguage();
-  const { toast } = useToast();
+  const { language } = useLanguage();
   const { user } = useUser();
   
   const firestore = useFirestore();
@@ -261,9 +277,6 @@ export default function PostPage() {
 
   const canView = post && (post.status === 'published' || (post.status === 'scheduled' && post.date <= Date.now()) || !!user);
 
-
-  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
-  const [isTranslating, setIsTranslating] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
 
   useEffect(() => {
@@ -271,109 +284,56 @@ export default function PostPage() {
         setCurrentUrl(`${window.location.origin}/blog/${slug}`);
     }
   }, [slug]);
-  
-  useEffect(() => {
-    // Reset translation when language is switched manually
-    setTranslatedContent(null);
-  }, [language]);
 
   if (isLoading) {
     return (
-      <div className="container flex items-center justify-center py-24">
-        <Loader2 className="h-16 w-16 animate-spin" />
+      <div className="container flex items-center justify-center py-32">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (error) {
+  if (error || !post || !canView) {
+    if (!isLoading && !post) notFound();
     return (
-        <div className="container max-w-4xl py-12 md:py-20">
+        <div className="container max-w-4xl py-20">
             <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>Problem Loading Post</AlertTitle>
                 <AlertDescription>
-                    There was a problem loading this post. Please try again later.
+                    We encountered an issue. Please check your connection or try again later.
                 </AlertDescription>
             </Alert>
         </div>
     );
   }
-  
-  if (!isLoading && !canView) {
-    notFound();
-  }
-
-  if (!post) {
-      return (
-          <div className="container flex items-center justify-center py-24">
-            <Loader2 className="h-16 w-16 animate-spin" />
-          </div>
-      );
-  }
-
-
-  const handleTranslate = async () => {
-    setIsTranslating(true);
-    try {
-      const targetLanguage = language === 'en' ? 'Bangla' : 'English';
-      const contentToTranslate = language === 'en' ? post.content_en : post.content_bn;
-      
-      const result = await onDemandPostTranslation({
-        content: contentToTranslate,
-        targetLanguage: targetLanguage,
-      });
-
-      setTranslatedContent(result.translatedContent);
-      setLanguage(language === 'en' ? 'bn' : 'en');
-      toast({
-        title: language === 'en' ? 'Translation Successful' : 'অনুবাদ সফল হয়েছে',
-        description: language === 'en' ? `Post translated to ${targetLanguage}.` : `পোস্টটি ${targetLanguage}-এ অনুবাদ করা হয়েছে।`,
-      });
-    } catch (error) {
-      console.error("Translation failed:", error);
-      toast({
-        variant: "destructive",
-        title: language === 'en' ? 'Translation Failed' : 'অনুবাদ ব্যর্থ হয়েছে',
-        description: language === 'en' ? 'Could not translate the post.' : 'পোস্টটি অনুবাদ করা যায়নি।',
-      });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
 
   const title = language === 'en' ? post.title_en : post.title_bn;
-  const content = translatedContent ?? (language === 'en' ? post.content_en : post.content_bn);
+  const content = language === 'en' ? post.content_en : post.content_bn;
 
   return (
-    <div className="container max-w-4xl py-12 md:py-20">
+    <div className="container max-w-4xl py-8 md:py-16">
       <article>
         <header className="mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 text-muted-foreground text-sm mb-4">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <div className="flex items-center gap-2"><User className="h-4 w-4" /> {post.author}</div>
-                    <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-muted-foreground text-xs mb-6 border-b pb-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {post.author}</div>
+                    <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {format(new Date(post.date), 'MMMM d, yyyy')}</div>
                 </div>
                 <SocialShare title={title} url={currentUrl} />
             </div>
-            <Badge variant="secondary" className="mb-4">{post.category}</Badge>
-            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4">{title}</h1>
+            <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20 border-none px-4">{post.category}</Badge>
+            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-8 text-foreground">{title}</h1>
         </header>
 
-        <div className="relative aspect-[16/9] rounded-lg overflow-hidden mb-8 shadow-lg">
-          <Image src={post.imageUrl} alt={title} fill className="object-cover" priority data-ai-hint={post.imageHint} />
+        <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden mb-10 shadow-2xl">
+          <Image src={post.imageUrl} alt={title} fill className="object-cover transition-transform duration-700 hover:scale-105" priority data-ai-hint={post.imageHint} />
         </div>
 
-        <div className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto mb-8">
+        <div className="prose dark:prose-invert prose-slate lg:prose-xl max-w-none mx-auto mb-12 prose-headings:font-headline prose-a:text-primary">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {content}
           </ReactMarkdown>
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 border-t pt-8">
-          <Button onClick={handleTranslate} disabled={isTranslating}>
-            {isTranslating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Languages className="mr-2 h-4 w-4" />}
-            {isTranslating ? (language === 'en' ? 'Translating...' : 'অনুবাদ হচ্ছে...') : (language === 'en' ? 'Translate to Bangla' : 'Translate to English')}
-          </Button>
         </div>
       </article>
       

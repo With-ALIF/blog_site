@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage, Language } from '@/contexts/language-context';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { sendTelegramNotification } from '@/ai/flows/send-telegram-notification';
 
 const createFormSchema = (language: Language) => z.object({
   email: z.string().email({ message: language === 'en' ? 'Invalid email address.' : 'অবৈধ ইমেল ঠিকানা।' }),
@@ -30,6 +31,7 @@ export function SubscriptionForm() {
       submitting: 'Subscribing...',
       successTitle: 'Subscription Successful!',
       successDescription: 'Thank you for subscribing. You are now on our mailing list.',
+      alreadySubscribed: 'This email is already subscribed to our newsletter.',
       errorTitle: 'Subscription Failed',
       errorGeneral: 'Could not process your subscription. Please try again later.',
     },
@@ -41,6 +43,7 @@ export function SubscriptionForm() {
       submitting: 'সাবস্ক্রাইব করা হচ্ছে...',
       successTitle: 'সাবস্ক্রিপশন সফল!',
       successDescription: 'সাবস্ক্রাইব করার জন্য ধন্যবাদ। আপনি এখন আমাদের মেইলিং তালিকায় আছেন।',
+      alreadySubscribed: 'এই ইমেলটি ইতিমধ্যে আমাদের নিউজলেটারে সাবস্ক্রাইব করা হয়েছে।',
       errorTitle: 'সাবস্ক্রিপশন ব্যর্থ হয়েছে',
       errorGeneral: 'আপনার সাবস্ক্রিপশন প্রক্রিয়া করা যায়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।',
     }
@@ -55,7 +58,7 @@ export function SubscriptionForm() {
   
   const { isSubmitting } = form.formState;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({
             variant: 'destructive',
@@ -65,19 +68,47 @@ export function SubscriptionForm() {
         return;
     };
     
-    const subscribersCol = collection(firestore, 'subscribers');
+    try {
+        const emailLower = values.email.toLowerCase();
+        const subscribersCol = collection(firestore, 'subscribers');
+        
+        // Check for duplicate subscription
+        const q = query(subscribersCol, where("email", "==", emailLower));
+        const querySnapshot = await getDocs(q);
 
-    // addDocumentNonBlocking handles its own errors via the error-emitter
-    addDocumentNonBlocking(subscribersCol, {
-        email: values.email,
-        subscribedAt: Date.now(),
-    });
+        if (!querySnapshot.empty) {
+            toast({
+                variant: 'destructive',
+                title: language === 'en' ? 'Already Subscribed' : 'ইতিমধ্যে সাবস্ক্রাইব করা',
+                description: formContent[language].alreadySubscribed,
+            });
+            return;
+        }
 
-    toast({
-        title: formContent[language].successTitle,
-        description: formContent[language].successDescription,
-    });
-    form.reset();
+        // Add to Firestore if not duplicate
+        addDocumentNonBlocking(subscribersCol, {
+            email: emailLower,
+            subscribedAt: Date.now(),
+        });
+
+        // Send Telegram notification (Awaited for Serverless reliability)
+        await sendTelegramNotification({ 
+            type: 'subscription', 
+            email: values.email 
+        });
+
+        toast({
+            title: formContent[language].successTitle,
+            description: formContent[language].successDescription,
+        });
+        form.reset();
+    } catch (e: any) {
+        toast({
+            variant: 'destructive',
+            title: formContent[language].errorTitle,
+            description: e.message || formContent[language].errorGeneral,
+        });
+    }
   }
 
   return (

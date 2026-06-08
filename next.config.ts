@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -33,6 +34,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'github.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.postimg.cc',
         pathname: '/**',
       },
     ],
